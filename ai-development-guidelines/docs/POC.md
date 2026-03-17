@@ -124,17 +124,22 @@ Phase 0 is the **Proof of Concept** — a fully functional, locally deployable v
 
 ### Prerequisites
 
-| Tool | Version | Install |
-|---|---|---|
-| Docker Desktop | Latest | docker.com |
-| Python | 3.11+ | python.org |
-| Git | Any | git-scm.com |
-| OpenAI API Key | — | platform.openai.com |
-| Apollo.io API Key | — | apollo.io (free tier) |
-| Hunter.io API Key | — | hunter.io (free tier) |
-| SendGrid API Key | — | sendgrid.com (free tier) |
+| Tool | Version | Install | Notes |
+|---|---|---|---|
+| Docker Desktop | Latest | docker.com | Enable WSL2 backend on Windows |
+| Python | 3.11+ | python.org | Use `python` on Windows (not `python3`) |
+| Git | Any | git-scm.com | Includes Git Bash — use for `make` commands |
+| Git Bash / WSL2 | — | (bundled with Git / Microsoft Store) | Required for `make` on Windows |
+| OpenAI API Key | — | platform.openai.com | — |
+| Apollo.io API Key | — | apollo.io (free tier) | — |
+| Hunter.io API Key | — | hunter.io (free tier) | — |
+| SendGrid API Key | — | sendgrid.com (free tier) | — |
 
-### Step-by-Step Setup
+> **Windows note:** Docker Desktop must be running before any `docker compose` or `make` commands. Enable the **WSL2 backend** in Docker Desktop settings for best performance.
+
+---
+
+### Step-by-Step Setup — Git Bash / WSL2 (Recommended on Windows)
 
 ```bash
 # 1. Clone repository
@@ -143,11 +148,13 @@ cd Jewelry-AI
 
 # 2. Copy and fill environment file
 cp .env.example .env
-# Open .env and fill in: OPENAI_API_KEY, APOLLO_API_KEY, HUNTER_API_KEY, SENDGRID_API_KEY
+# Open .env in Notepad or VS Code and fill in:
+# OPENAI_API_KEY, APOLLO_API_KEY, HUNTER_API_KEY, SENDGRID_API_KEY
 
 # 3. Start all services
 make up
 # Wait ~60 seconds for all containers to be healthy
+# Check: docker compose ps  (all services should show "healthy")
 
 # 4. Run database migrations
 make migrate
@@ -156,10 +163,41 @@ make migrate
 python scripts/seed_demo_data.py
 
 # 6. Open Streamlit UI
-open http://localhost:8501
+start http://localhost:8501
 
 # 7. Open API docs (optional)
-open http://localhost:8000/docs
+start http://localhost:8000/docs
+```
+
+---
+
+### Step-by-Step Setup — PowerShell (No `make` Required)
+
+```powershell
+# 1. Clone repository
+git clone https://github.com/saurabhdeepmindz/Jewelry-AI.git
+Set-Location Jewelry-AI
+
+# 2. Copy and fill environment file
+Copy-Item .env.example .env
+# Open .env in Notepad: notepad .env
+# Fill in: OPENAI_API_KEY, APOLLO_API_KEY, HUNTER_API_KEY, SENDGRID_API_KEY
+
+# 3. Start all services
+docker compose up --build -d
+# Wait ~60 seconds. Verify: docker compose ps
+
+# 4. Run database migrations
+docker compose exec fastapi alembic upgrade head
+
+# 5. Seed demo data
+docker compose exec fastapi python scripts/seed_demo_data.py
+
+# 6. Open Streamlit UI
+Start-Process "http://localhost:8501"
+
+# 7. Open API docs (optional)
+Start-Process "http://localhost:8000/docs"
 ```
 
 ### Demo CSV File

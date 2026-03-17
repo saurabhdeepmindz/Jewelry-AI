@@ -90,30 +90,67 @@ You are the **principal architect and senior engineer** for this repository.
 
 ## Quick Commands
 
-```bash
-# Start all services (Docker Compose)
-make up
+> **Windows users:** `make` requires Git Bash, WSL2, or [GnuWin32 make](https://gnuwin32.sourceforge.net/packages/make.htm).
+> All commands below show the `make` shortcut **and** the raw equivalent for PowerShell/CMD.
 
-# Run database migrations
-make migrate
+### Using `make` (Git Bash / WSL2 — recommended)
+
+```bash
+make up            # Start all services
+make migrate       # Run Alembic migrations
+make test-cov      # Run tests with coverage report
+make check         # Lint + type check + test (full pre-PR check)
+make dev           # Start FastAPI dev server (hot reload)
+make ui            # Start Streamlit UI
+make worker        # Start Celery worker
+make migrate-new name="add_score_to_leads"   # Create new migration
+```
+
+### Raw Commands (PowerShell / CMD — no make required)
+
+```powershell
+# Start all services
+docker compose up --build -d
+
+# Run Alembic migrations
+docker compose exec fastapi alembic upgrade head
 
 # Run tests with coverage
-make test-cov
+docker compose exec fastapi pytest --cov=src --cov-report=term-missing
 
-# Lint + type check + test (full check before PR)
-make check
+# Lint (ruff)
+docker compose exec fastapi ruff check src tests
+
+# Type check (mypy)
+docker compose exec fastapi mypy src
+
+# Start FastAPI dev server (outside Docker, local venv)
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+
+# Start Streamlit UI (outside Docker, local venv)
+streamlit run src/ui/app.py
+
+# Start Celery worker (outside Docker, local venv)
+celery -A src.tasks.celery_app worker --loglevel=info -Q ingestion,enrichment,outreach,ml
 
 # Create new Alembic migration
-make migrate-new name="add_score_to_leads"
+alembic revision --autogenerate -m "add_score_to_leads"
+```
 
-# Start FastAPI dev server (hot reload)
-make dev
+### Windows Virtual Environment
 
-# Start Streamlit UI
-make ui
+```powershell
+# Create venv
+python -m venv .venv
 
-# Start Celery worker
-make worker
+# Activate (PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Activate (CMD)
+.\.venv\Scripts\activate.bat
+
+# Install dependencies
+pip install -e ".[dev]"
 ```
 
 ---
@@ -161,17 +198,30 @@ Jewelry wholesale lead automation — Shivam Jewels sources diamond buyers from 
 
 ---
 
+## Windows Developer Notes
+
+This project is **fully supported on Windows** via Docker Desktop + Git Bash. See [rules/devops-deployment.md](ai-development-guidelines/rules/devops-deployment.md) → *Windows Developer Setup* section for:
+- Shell recommendation (Git Bash vs WSL2 vs PowerShell)
+- `make` ↔ PowerShell command equivalents
+- Virtual environment activation on Windows
+- Line ending setup (`.gitattributes` — required)
+- `pathlib.Path` rule (no hardcoded `/` or `\` separators)
+- Cross-platform URL-open pattern (`webbrowser.open()`)
+
+---
+
 ## Current Phase
 
 **Phase 0 — Foundation Setup** (see [Plan.md](ai-development-guidelines/Plan.md))
 
 Immediate next steps:
-1. `pyproject.toml` with ruff, mypy, pytest, isort config
-2. `docker-compose.yml` with all services
-3. `src/core/config.py` — pydantic-settings with startup validation
-4. `src/db/session.py` — async SQLAlchemy engine
-5. Alembic baseline migration
-6. Scaffold complete folder structure per [Architecture.md](ai-development-guidelines/Architecture.md)
+1. `.gitattributes` — line ending enforcement (Windows compatibility)
+2. `pyproject.toml` with ruff, mypy, pytest, isort config
+3. `docker-compose.yml` with all services
+4. `src/core/config.py` — pydantic-settings with startup validation
+5. `src/db/session.py` — async SQLAlchemy engine
+6. Alembic baseline migration
+7. Scaffold complete folder structure per [Architecture.md](ai-development-guidelines/Architecture.md)
 
 ---
 

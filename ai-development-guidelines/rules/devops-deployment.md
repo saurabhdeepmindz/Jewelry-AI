@@ -373,6 +373,113 @@ Monitor these signals:
 
 ---
 
+## Windows Developer Setup
+
+All development on Windows is supported via **Docker Desktop + Git Bash** (recommended) or **WSL2** (full Linux environment). The project runs entirely inside Docker containers — the host OS does not affect runtime behavior.
+
+### Requirements on Windows
+
+| Tool | Version | Notes |
+|---|---|---|
+| Docker Desktop | Latest | Enable WSL2 backend in Settings → General |
+| Git for Windows | Any | Provides Git Bash — use for all `make` commands |
+| Python 3.11+ | 3.11+ | For running scripts outside Docker |
+| VS Code | Any | Recommended editor with Docker + Python extensions |
+
+### Shell Recommendation
+
+| Scenario | Recommended Shell |
+|---|---|
+| `make` commands | **Git Bash** (bundled with Git for Windows) |
+| Full Linux tooling | **WSL2** (Ubuntu from Microsoft Store) |
+| Docker management | **PowerShell** or Git Bash |
+| Python scripts outside Docker | **PowerShell** or CMD |
+
+### Windows-Specific `make` Targets
+
+`make` works natively in **Git Bash**. If you cannot use Git Bash, use the PowerShell equivalents:
+
+| `make` command | PowerShell equivalent |
+|---|---|
+| `make up` | `docker compose up --build -d` |
+| `make down` | `docker compose down` |
+| `make migrate` | `docker compose exec fastapi alembic upgrade head` |
+| `make test-cov` | `docker compose exec fastapi pytest --cov=src --cov-report=term-missing` |
+| `make lint` | `docker compose exec fastapi ruff check src tests` |
+| `make typecheck` | `docker compose exec fastapi mypy src` |
+| `make dev` | `uvicorn src.main:app --reload --host 0.0.0.0 --port 8000` |
+| `make ui` | `streamlit run src/ui/app.py` |
+| `make worker` | `celery -A src.tasks.celery_app worker --loglevel=info` |
+
+### Windows Virtual Environment
+
+```powershell
+# Create
+python -m venv .venv
+
+# Activate (PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# Activate (CMD)
+.\.venv\Scripts\activate.bat
+
+# If PowerShell script execution is blocked:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+### Line Endings
+
+Windows uses CRLF by default. The project enforces LF for all source files. Add `.gitattributes` at the root:
+
+```gitattributes
+# .gitattributes
+* text=auto eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.env* text eol=lf
+Makefile text eol=lf
+```
+
+This ensures consistent line endings regardless of whether the developer is on Windows, macOS, or Linux.
+
+### Path Separators in Python Code
+
+Always use `pathlib.Path` — never string concatenation with `/` or `\`:
+
+```python
+# CORRECT — works on Windows and Linux
+from pathlib import Path
+data_dir = Path("scripts") / "demo_data" / "demo_leads.csv"
+
+# WRONG — breaks on Windows
+data_dir = "scripts/demo_data/demo_leads.csv"
+```
+
+### Opening URLs from Scripts
+
+Scripts that open a browser must use the `webbrowser` standard library — not `open` (macOS only):
+
+```python
+# CORRECT — cross-platform
+import webbrowser
+webbrowser.open("http://localhost:8501")
+
+# WRONG — macOS only
+# os.system("open http://localhost:8501")
+```
+
+In shell scripts or docs, use the correct command per OS:
+
+| OS | Command |
+|---|---|
+| Windows CMD/PowerShell | `start http://localhost:8501` |
+| macOS | `open http://localhost:8501` |
+| Linux | `xdg-open http://localhost:8501` |
+
+---
+
 ## Do Not
 
 - Hardcode environment-specific values anywhere in source code
@@ -383,3 +490,5 @@ Monitor these signals:
 - Skip health check verification after deployment
 - Use `pip install` in production — always use `pip install -r requirements.txt` with pinned versions
 - Use `debug=True` in FastAPI in production (`APP_ENV=production` disables it)
+- Use backslash path separators in Python code — always use `pathlib.Path`
+- Use `open` command in cross-platform scripts — use `webbrowser.open()` or `start`/`xdg-open`

@@ -1,0 +1,27 @@
+Current As Is Process
+
+1.	Collect raw company/buyer data from sources: GMTs, Jewelry Book of Trade, Hill Lists, Rapid Lists, and other scraped website lists
+2.	Import data into internal system and check if the lead matches current diamond inventory (e.g., RBC, specific carat ranges)
+3.	If inventory match found, lead is marked as 'Eligible'
+4.	Manually search LinkedIn and other platforms to find key contacts: buyer name, designation, email, phone number
+5.	Find physical or mailing address for postal outreach where required
+6.	Initiate outreach: email campaigns and/or phone calls
+7.	Manually log all contact details, outreach activity, and responses into CRM
+
+
+Recommended Automation — To-Be
+
+•	Scheduled scraping from GMTs, Trade directories, Rapid APIs
+•	Auto inventory-match engine: eligible / not eligible flag
+•	Contact enrichment via Apollo.io / Hunter.io / LinkedIn API
+•	Automated email + WhatsApp outreach sequences
+•	Auto-logging of all leads and responses to CRM
+•	Lead scoring based on match quality and past engagement
+
+
+
+After Automation
+•	1 lead processed in minutes automatically
+•	Standardized, enriched data every time
+•	Outreach within hours of lead identification
+•	CRM always up-to-date, zero manual entry

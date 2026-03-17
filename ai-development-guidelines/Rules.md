@@ -1,51 +1,162 @@
-# Rules — Jewelry AI Platform
+# Master Rules — Jewelry AI Platform
 
-This is the **master rules file**. It provides references to all specialized rules files that govern development on this project. All contributors and AI agents MUST follow these rules.
+This file is the single source of truth for all engineering rules in this repository.
+Specific domain rules are maintained in `rules/` and `docs/` — referenced below.
+
+Before writing any code: read `ARCHITECTURE.md`, `docs/DB_SCHEMA.md`, and `docs/API_SPEC.md`.
 
 ---
 
-## Quick Reference
+## 1. Principal Architect Mode
 
-| Rule Area | File | Summary |
+You are the principal architect and senior engineer for this repository.
+
+- Think like an architect first, then implement like a senior engineer
+- Preserve architecture consistency across all modules
+- Prefer scalable, modular, production-ready code over shortcuts
+- Infer the correct architectural layer before writing code
+- **Extend existing patterns before introducing new ones**
+- Keep code readable, typed, testable, secure, and deployable
+- When building a feature, return production-oriented code, not demo-only code
+
+---
+
+## 2. Clean Architecture — Non-Negotiable
+
+```
+HTTP Routers  →  Services  →  Repositories  →  DB Models  →  PostgreSQL
+   (thin)         (logic)      (data access)      (ORM)
+```
+
+| Layer | Responsibility | Rule |
 |---|---|---|
-| Coding Style | [rules/coding-style-rules.md](rules/coding-style-rules.md) | Immutability, naming, file size, nesting |
-| Security | [rules/security-rules.md](rules/security-rules.md) | Secrets, input validation, auth |
-| Testing | [rules/testing-rules.md](rules/testing-rules.md) | TDD, 80% coverage, test types |
-| API Design | [rules/api-design-rules.md](rules/api-design-rules.md) | REST conventions, error format |
-| Data | [rules/data-rules.md](rules/data-rules.md) | Database, migrations, soft deletes |
+| **Routers** | Route handling, Pydantic validation, response | Thin — no business logic |
+| **Services** | All business logic and orchestration | No direct DB calls |
+| **Repositories** | All database access | No business logic |
+| **Domain Models** | Pydantic domain objects | No persistence logic |
+| **Agents** | LangChain / LangGraph AI orchestration | No direct DB calls — via services |
+| **Transformers/Schemas** | API response shaping | No persistence or side effects |
+| **Events** | Decoupled side effects (email, CRM, external sync) | One responsibility per handler |
+
+**Do not:**
+- Put SQLAlchemy queries inside routers or service methods
+- Put business logic inside Pydantic schema files
+- Mix unrelated domains in the same service file
+- Call repositories from event handlers directly (go through services)
+- Call OpenAI/Anthropic APIs directly — always via LangChain
 
 ---
 
-## Non-Negotiable Rules (Always Apply)
+## 3. Domain-Specific Rules
 
-1. **No secrets in code** — API keys, passwords, tokens go in `.env` only. See [security-rules.md](rules/security-rules.md).
-2. **No mutation of domain objects** — Always return new objects. See [coding-style-rules.md](rules/coding-style-rules.md).
-3. **Tests before implementation** — Write the test first. See [testing-rules.md](rules/testing-rules.md).
-4. **Full docstrings on all public methods** — See [CodingStandards.md](CodingStandards.md).
-5. **Validate at all system boundaries** — User input, API responses, file content. See [security-rules.md](rules/security-rules.md).
-6. **Structured logging with context** — Every log MUST include trace_id and entity ID. See [Architecture.md](Architecture.md).
-7. **Handle all exceptions explicitly** — Never swallow errors silently. See [Architecture.md](Architecture.md).
-8. **Use async for all I/O** — No blocking calls on the event loop. See [coding-style-rules.md](rules/coding-style-rules.md).
-
----
-
-## Design Principles
-
-- **Separation of Concerns** — Each class/module has one responsibility.
-- **Dependency Injection** — Services receive dependencies; they don't create them.
-- **Repository Pattern** — All DB access behind repository interfaces.
-- **Strategy Pattern** — Pluggable algorithms (enrichment providers, scoring).
-- **Event-Driven** — Services communicate via events, not direct calls where possible.
-
-For full pattern details see [DesignPatterns.md](DesignPatterns.md).
+| Domain | Rules File |
+|---|---|
+| **Coding Style** | [rules/coding-style-rules.md](rules/coding-style-rules.md) |
+| **Security** | [rules/security-rules.md](rules/security-rules.md) |
+| **Testing & Quality** | [rules/testing-rules.md](rules/testing-rules.md) |
+| **API Design & Contracts** | [rules/api-design-rules.md](rules/api-design-rules.md) |
+| **Database & Migrations** | [rules/data-rules.md](rules/data-rules.md) |
+| **Error Handling & Observability** | [rules/error-observability.md](rules/error-observability.md) |
+| **DevOps & Deployment** | [rules/devops-deployment.md](rules/devops-deployment.md) |
+| **AI / ML / LangChain / LangGraph** | [rules/ai-ml-rules.md](rules/ai-ml-rules.md) |
+| **Performance & Caching** | [rules/performance-caching-rules.md](rules/performance-caching-rules.md) |
 
 ---
 
-## Technology Constraints
+## 4. Naming Conventions
 
-- Python 3.11+ only
-- FastAPI for all API endpoints (no Flask, no Django)
-- SQLAlchemy 2.x async only (no sync ORM calls)
-- LangChain / LangGraph for all AI orchestration (no raw OpenAI calls in services)
-- All background jobs via Celery (no `asyncio.create_task` for fire-and-forget)
-- All config via `pydantic-settings` (no `os.environ.get()` directly in services)
+### Files
+| Type | Pattern | Example |
+|---|---|---|
+| Router | `*.py` in `api/routers/` | `leads.py` |
+| Service | `*_service.py` | `lead_ingestion_service.py` |
+| Repository | `*_repository.py` | `lead_repository.py` |
+| Domain Model | `*.py` in `domain/` | `lead.py` |
+| Agent | `*_agent.py` | `enrichment_agent.py` |
+| LangGraph Workflow | `*_workflow.py` | `lead_pipeline.py` |
+| Celery Task | `*_tasks.py` | `enrichment_tasks.py` |
+| Integration Client | `*_client.py` | `apollo_client.py` |
+| Exception | `exceptions.py` (in `core/`) | — |
+
+### Classes
+| Type | Pattern | Example |
+|---|---|---|
+| Service | `XxxService` | `LeadIngestionService` |
+| Repository | `XxxRepository` | `LeadRepository` |
+| Domain Model | `Xxx` (Pydantic) | `Lead`, `Contact` |
+| DB Model | `XxxModel` | `LeadModel` |
+| Request Schema | `XxxCreateRequest` | `LeadCreateRequest` |
+| Response Schema | `XxxResponse` | `LeadResponse` |
+| Exception | `XxxException` | `LeadNotFoundException` |
+| Celery Task | `xxx_task` (function) | `enrich_lead_task` |
+
+### Database
+- Tables: `snake_case` (e.g., `lead_inventory_matches`)
+- Columns: `snake_case` (e.g., `match_status`, `is_deleted`)
+- Foreign keys: `<table_singular>_id` (e.g., `lead_id`, `contact_id`)
+- UUIDs: always `id` (not `uuid` as a separate column — UUID is the PK)
+- Timestamps: `created_at`, `updated_at` on all tables
+
+---
+
+## 5. File Size & Organization
+
+- **Target:** 200–400 lines per file
+- **Maximum:** 800 lines — extract utilities if exceeded
+- **Organization:** feature/domain-based, not type-based
+- **Cohesion:** high within file, low coupling between files
+
+---
+
+## 6. Immutability
+
+Always create new objects — never mutate existing ones:
+
+```python
+# WRONG: mutation
+lead.status = LeadStatus.MATCHED
+
+# CORRECT: new object
+updated_lead = lead.model_copy(update={"status": LeadStatus.MATCHED})
+```
+
+---
+
+## 7. Configuration
+
+- All environment values via `pydantic-settings` in `src/core/config.py`
+- Never `os.environ.get()` directly in service or agent code
+- Never hardcode URLs, ports, secrets, model names, or environment-specific values
+- All required vars validated at startup — app fails fast with clear error message
+
+---
+
+## 8. Error Handling
+
+- Use typed custom exceptions from `src/core/exceptions.py`
+- Never expose internal stack traces or raw DB errors to API consumers
+- Always return the standard error envelope
+- Log detailed context server-side; return user-friendly messages to clients
+- See [rules/error-observability.md](rules/error-observability.md)
+
+---
+
+## 9. Code Quality Checklist
+
+Before marking any task complete:
+
+- [ ] Code follows the layer architecture (router / service / repository)
+- [ ] No hardcoded secrets, model names, URLs, or environment values
+- [ ] Pydantic validation on all user-facing inputs
+- [ ] Error handling present (no silent `except` blocks)
+- [ ] No direct SQLAlchemy calls outside repositories
+- [ ] No direct LLM API calls outside LangChain agents
+- [ ] File size under 800 lines
+- [ ] Functions under 50 lines
+- [ ] No deeply nested logic (max 4 levels)
+- [ ] Response schemas used to shape API responses
+- [ ] Tests written (unit for services, integration for routers)
+- [ ] Alembic migration created for any schema change
+- [ ] No mutation of domain objects
+- [ ] Structured logging with trace_id on key operations
+- [ ] Health check endpoint present if new service added

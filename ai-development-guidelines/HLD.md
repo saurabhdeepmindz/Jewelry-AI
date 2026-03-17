@@ -1,0 +1,256 @@
+# High-Level Design (HLD) — Jewelry AI Platform
+
+## 1. System Overview
+
+The Jewelry AI Platform is a modular, event-driven automation system that transforms raw trade lead lists into enriched, scored, and contacted buyer relationships — with zero manual intervention. The system is composed of loosely coupled services orchestrated by LangGraph agents and n8n workflow automation.
+
+---
+
+## 2. Overall Architecture Diagram
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        JEWELRY AI PLATFORM                                  ║
+║                                                                              ║
+║  ┌─────────────────────────────────────────────────────────────────────┐    ║
+║  │                    PRESENTATION LAYER                                │    ║
+║  │                                                                      │    ║
+║  │   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │    ║
+║  │   │  Dashboard   │  │  Lead Mgmt   │  │  Outreach    │             │    ║
+║  │   │  (Streamlit) │  │  (Streamlit) │  │  (Streamlit) │             │    ║
+║  │   └──────┬───────┘  └──────┬───────┘  └──────┬───────┘             │    ║
+║  └──────────┼─────────────────┼─────────────────┼─────────────────────┘    ║
+║             │                 │                  │                           ║
+║             └────────────────►│◄─────────────────┘                          ║
+║                               │ REST / JSON                                 ║
+║  ┌────────────────────────────▼────────────────────────────────────────┐    ║
+║  │                     API GATEWAY LAYER                                │    ║
+║  │                  FastAPI  (Port 8000)                                │    ║
+║  │   Auth Middleware | Rate Limit | Request Logging | CORS              │    ║
+║  │                                                                      │    ║
+║  │   /leads  /inventory  /enrichment  /outreach  /crm  /analytics      │    ║
+║  └───────┬────────────────┬───────────────┬──────────────┬─────────────┘    ║
+║          │                │               │              │                   ║
+║  ┌───────▼──────┐ ┌───────▼──────┐ ┌──────▼──────┐ ┌───▼──────────┐       ║
+║  │   SERVICES   │ │    AGENTS    │ │  BACKGROUND │ │   ML LAYER   │       ║
+║  │              │ │              │ │    TASKS    │ │              │       ║
+║  │ LeadIngestion│ │ LangChain    │ │   Celery    │ │ Lead Scorer  │       ║
+║  │ InventoryMatch│ │ LangGraph    │ │   Workers   │ │ Inv Matcher  │       ║
+║  │ Enrichment   │ │ Enrichment   │ │             │ │ (XGBoost)    │       ║
+║  │ Outreach     │ │ Outreach     │ │ ingestion_  │ │              │       ║
+║  │ CRM          │ │ Scoring      │ │ enrichment_ │ │ MLflow       │       ║
+║  │ Scoring      │ │ Agents       │ │ outreach_   │ │ Tracking     │       ║
+║  └───────┬──────┘ └───────┬──────┘ │ tasks       │ └───────┬──────┘       ║
+║          │                │        └──────┬──────┘         │               ║
+║          └────────────────┼───────────────┼────────────────┘               ║
+║                           │               │                                  ║
+║  ┌────────────────────────▼───────────────▼────────────────────────────┐    ║
+║  │                      DATA LAYER                                      │    ║
+║  │                                                                      │    ║
+║  │   ┌────────────────────────┐    ┌────────────────────┐              │    ║
+║  │   │      PostgreSQL        │    │       Redis         │              │    ║
+║  │   │  + pgvector extension  │    │  Task Queue + Cache │              │    ║
+║  │   │                        │    │                     │              │    ║
+║  │   │  leads                 │    │  celery_broker      │              │    ║
+║  │   │  inventory             │    │  rate_limit_counters│              │    ║
+║  │   │  contacts              │    │  session_cache      │              │    ║
+║  │   │  outreach_log          │    │                     │              │    ║
+║  │   │  crm_activity          │    └────────────────────┘              │    ║
+║  │   │  lead_embeddings       │                                         │    ║
+║  │   └────────────────────────┘                                         │    ║
+║  └──────────────────────────────────────────────────────────────────────┘    ║
+║                                                                              ║
+║  ┌──────────────────────────────────────────────────────────────────────┐    ║
+║  │                    EXTERNAL INTEGRATIONS                             │    ║
+║  │                                                                      │    ║
+║  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │    ║
+║  │  │Apollo.io │ │Hunter.io │ │LinkedIn  │ │SendGrid  │ │  n8n     │  │    ║
+║  │  │Contact   │ │Email     │ │Profile   │ │Email     │ │Workflow  │  │    ║
+║  │  │Enrichment│ │Verify    │ │Enrichment│ │Outreach  │ │Engine    │  │    ║
+║  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘  │    ║
+║  │                                                                      │    ║
+║  │  ┌──────────────────────────────────────────────────────────────┐   │    ║
+║  │  │                    LLM PROVIDERS                              │   │    ║
+║  │  │  OpenAI GPT-4o  /  Anthropic Claude  /  Fine-tuned Model     │   │    ║
+║  │  └──────────────────────────────────────────────────────────────┘   │    ║
+║  └──────────────────────────────────────────────────────────────────────┘    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 3. Lead Pipeline Flow Diagram
+
+```
+ [Trade List / File Upload]
+          │
+          ▼
+ ┌─────────────────┐
+ │  Lead Ingestion │  → Validate → Deduplicate → Persist
+ │    Service      │
+ └────────┬────────┘
+          │ LeadIngestedEvent
+          ▼
+ ┌─────────────────┐
+ │ Inventory Match │  → Check rules (carat, cut, shape)
+ │    Engine       │  → Flag: ELIGIBLE / NOT_ELIGIBLE
+ └────────┬────────┘
+          │ (ELIGIBLE only)
+          ▼
+ ┌─────────────────┐
+ │    Contact      │  → Apollo.io → Hunter verify → LinkedIn
+ │  Enrichment     │  → Store enriched contact
+ │    Agent        │
+ └────────┬────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │  Lead Scoring   │  → XGBoost model → Score 0-100
+ │    Service      │
+ └────────┬────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │    Outreach     │  → LLM generates personalized email
+ │  Generation     │  → [HUMAN REVIEW GATE] (optional)
+ │    Agent        │  → SendGrid send → Track opens/clicks
+ └────────┬────────┘
+          │
+          ▼
+ ┌─────────────────┐
+ │   CRM Logging   │  → Log all events → Assign follow-ups
+ │    Service      │
+ └─────────────────┘
+```
+
+---
+
+## 4. Deployment Diagram (Local)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    LOCAL MACHINE                             │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                  Docker Compose                      │   │
+│  │                                                      │   │
+│  │  ┌───────────────┐  ┌───────────────┐               │   │
+│  │  │  streamlit    │  │   fastapi     │               │   │
+│  │  │  :8501        │  │   :8000       │               │   │
+│  │  └───────────────┘  └───────────────┘               │   │
+│  │                                                      │   │
+│  │  ┌───────────────┐  ┌───────────────┐               │   │
+│  │  │  celery       │  │   celery      │               │   │
+│  │  │  worker       │  │   beat        │               │   │
+│  │  │  (async jobs) │  │  (scheduler)  │               │   │
+│  │  └───────────────┘  └───────────────┘               │   │
+│  │                                                      │   │
+│  │  ┌───────────────┐  ┌───────────────┐               │   │
+│  │  │  postgres     │  │    redis      │               │   │
+│  │  │  :5432        │  │    :6379      │               │   │
+│  │  └───────────────┘  └───────────────┘               │   │
+│  │                                                      │   │
+│  │  ┌───────────────┐  ┌───────────────┐               │   │
+│  │  │    n8n        │  │   mlflow      │               │   │
+│  │  │  :5678        │  │   :5000       │               │   │
+│  │  └───────────────┘  └───────────────┘               │   │
+│  │                                                      │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+          │                      │
+          ▼                      ▼
+  [External APIs]         [LLM Providers]
+  Apollo, Hunter,         OpenAI / Anthropic
+  SendGrid, LinkedIn      (via HTTPS)
+```
+
+---
+
+## 5. Data Flow Architecture
+
+### Synchronous (FastAPI)
+- UI → FastAPI → Service → Repository → PostgreSQL
+- Response returned in request-response cycle
+- Used for: CRUD operations, dashboard queries, single-lead actions
+
+### Asynchronous (Celery)
+- API enqueues task to Redis
+- Celery worker picks up task
+- Worker runs: scraping, bulk enrichment, bulk outreach
+- Results stored in PostgreSQL
+- UI polls status via FastAPI
+
+### Event-Driven (Internal Event Bus)
+- Services publish domain events
+- Subscribers trigger downstream actions
+- Fully in-process for POC (no external message broker needed)
+
+---
+
+## 6. Security Architecture
+
+```
+Browser/Streamlit
+      │
+      │ HTTPS (TLS)
+      ▼
+  FastAPI ──► JWT Validation Middleware
+      │
+      │ Parameterized queries only
+      ▼
+  PostgreSQL ──► Row-level security (future)
+```
+
+- All API keys stored in `.env` (never committed)
+- JWT tokens with 24-hour expiry
+- Rate limiting: 100 req/min per IP on enrichment endpoints
+- All external API calls over HTTPS
+
+---
+
+## 7. Integration Architecture
+
+```
+Jewelry AI Backend
+       │
+       ├──► Apollo.io REST API     [Contact enrichment]
+       │         └── Retry: 3x with exponential backoff
+       │
+       ├──► Hunter.io REST API     [Email verification]
+       │         └── Fallback: mark as unverified, do not skip
+       │
+       ├──► Proxycurl REST API     [LinkedIn enrichment]
+       │         └── Cache results in Redis for 7 days
+       │
+       ├──► SendGrid REST API      [Email send + webhooks]
+       │         └── Webhook: opens, clicks, bounces → CRM log
+       │
+       ├──► n8n REST API           [Workflow trigger]
+       │         └── Trigger outreach sequences
+       │
+       └──► OpenAI / Anthropic     [LLM generation]
+                 └── Model: GPT-4o / Claude Sonnet 4.6
+                 └── Max tokens: 800 per outreach email
+```
+
+---
+
+## 8. Technology Stack Summary
+
+| Layer | Technology | Version |
+|---|---|---|
+| Frontend | Streamlit | 1.32+ |
+| API | FastAPI | 0.110+ |
+| ORM | SQLAlchemy (async) | 2.0+ |
+| Migrations | Alembic | 1.13+ |
+| AI Orchestration | LangChain | 0.2+ |
+| Workflow Graphs | LangGraph | 0.1+ |
+| Task Queue | Celery | 5.3+ |
+| Message Broker | Redis | 7.2+ |
+| Database | PostgreSQL | 16+ |
+| Vector Search | pgvector | 0.7+ |
+| ML | scikit-learn / XGBoost | latest |
+| Experiment Tracking | MLflow | 2.x |
+| Workflow Automation | n8n | 1.x |
+| Containerization | Docker + Docker Compose | latest |

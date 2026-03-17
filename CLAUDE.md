@@ -59,6 +59,16 @@ Before writing any code, read in this order:
 | DevOps & Deployment | Docker, CI/CD, env validation, Makefile, deployment checklist | [rules/devops-deployment.md](ai-development-guidelines/rules/devops-deployment.md) |
 | AI / ML Rules | LangChain, LangGraph, LLM cost, Celery tasks, MLflow | [rules/ai-ml-rules.md](ai-development-guidelines/rules/ai-ml-rules.md) |
 | Performance & Caching | Redis patterns, N+1 prevention, rate limiting, connection pooling | [rules/performance-caching-rules.md](ai-development-guidelines/rules/performance-caching-rules.md) |
+| Frontend — Streamlit | Thin UI rules, APIClient, session state, caching, error handling | [rules/frontend-streamlit-rules.md](ai-development-guidelines/rules/frontend-streamlit-rules.md) |
+| Workflow — n8n / LangGraph / Celery | Layer responsibilities, n8n webhook design, LangGraph state, Celery tasks | [rules/workflow-rules.md](ai-development-guidelines/rules/workflow-rules.md) |
+| Configuration Management | Pydantic Settings class, feature flags, env file structure, env-specific overrides | [rules/configuration-rules.md](ai-development-guidelines/rules/configuration-rules.md) |
+| Synthetic & Demo Data | Demo data rules, `.example.com` domains, seed script structure, test factories | [rules/synthetic-data-rules.md](ai-development-guidelines/rules/synthetic-data-rules.md) |
+
+### POC & Demo
+
+| Document | Purpose | Link |
+|---|---|---|
+| **POC — Phase 0** | Local demo scope, 15-min demo script, setup instructions, success criteria | [docs/POC.md](ai-development-guidelines/docs/POC.md) |
 
 ---
 

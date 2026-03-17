@@ -60,6 +60,10 @@ HTTP Routers  →  Services  →  Repositories  →  DB Models  →  PostgreSQL
 | **DevOps & Deployment** | [rules/devops-deployment.md](rules/devops-deployment.md) |
 | **AI / ML / LangChain / LangGraph** | [rules/ai-ml-rules.md](rules/ai-ml-rules.md) |
 | **Performance & Caching** | [rules/performance-caching-rules.md](rules/performance-caching-rules.md) |
+| **Frontend — Streamlit** | [rules/frontend-streamlit-rules.md](rules/frontend-streamlit-rules.md) |
+| **Workflow — n8n / LangGraph / Celery** | [rules/workflow-rules.md](rules/workflow-rules.md) |
+| **Configuration Management** | [rules/configuration-rules.md](rules/configuration-rules.md) |
+| **Synthetic & Demo Data** | [rules/synthetic-data-rules.md](rules/synthetic-data-rules.md) |
 
 ---
 

@@ -25,10 +25,12 @@ Before writing any code, read in this order:
 
 1. **[RULES.md](./claude-best-practices/RULES.md)** — Master engineering rules for this project
 2. **[ARCHITECTURE.md](./claude-best-practices/ARCHITECTURE.md)** — System design, layers, and module map
-3. **[docs/DB_SCHEMA.md](./claude-best-practices/docs/DB_SCHEMA.md)** — Database schema and migration conventions
-4. **[docs/API_SPEC.md](./claude-best-practices/docs/API_SPEC.md)** — API design contracts and response formats
-5. **Relevant Epic** in `docs/epics/` — Scope and acceptance criteria for the current work
-6. **Relevant User Story** in `docs/stories/` — Specific behaviour, ACs, DoD
+3. **[docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md]** — Full module inventory and layer structure
+4. **[docs/actors/ACTORS.md]** — Actor definitions and RBAC model
+5. **[docs/DB_SCHEMA.md](./claude-best-practices/docs/DB_SCHEMA.md)** — Database schema and migration conventions
+6. **[docs/API_SPEC.md](./claude-best-practices/docs/API_SPEC.md)** — API design contracts and response formats
+7. **Relevant Epic** in `docs/epics/` — Scope and acceptance criteria for the current work
+8. **Relevant User Story** in `docs/stories/` — Specific behaviour, ACs, DoD
 
 ---
 
@@ -48,6 +50,8 @@ Before writing any code, read in this order:
 
 | Layer | Document | Purpose |
 |---|---|---|
+| Generic framework | `docs/rules/functional-landscape-rules.md` | Layer structure, module identification, landscape template |
+| Generic framework | `docs/rules/actor-roles-rules.md` | Actor types, RBAC design, role/permission model |
 | Generic framework | `docs/rules/epic-rules.md` | Epic anatomy, lifecycle, sizing, INVEST |
 | Generic framework | `docs/rules/user-story-rules.md` | Story format, Three Cs, GWT, splitting patterns |
 | Project-specific | `<project-docs>/rules/epic-rules.md` | Project's epic catalog, phases, DoD |
@@ -62,8 +66,10 @@ Every project should maintain the following documentation categories. The specif
 ### Start Here
 | Category | Content |
 |---|---|
+| **Functional Landscape** | Layer map of all system capabilities — modules, actors, scope boundaries |
+| **Actor & Roles** | Actor definitions, RBAC model, actor–module matrix |
 | **Ideas & Approach** | Solution concepts, tech stack rationale, POC scope |
-| **PRD** | Epics, user stories, functional landscape |
+| **PRD** | Epics, user stories, prioritised feature scope |
 | **Execution Plan** | Phase-by-phase SDLC plan with task checklists |
 
 ### Architecture & Design

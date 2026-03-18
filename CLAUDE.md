@@ -17,11 +17,13 @@ Before writing any code, read in this order:
 
 1. **[CLAUDE-Generic.md](ai-development-guidelines/CLAUDE-Generic.md)** — Generic operating principles, layer architecture, agile workflow
 2. **[Rules.md](ai-development-guidelines/Rules.md)** — Master engineering rules (non-negotiables, architecture, quality checklist)
-3. **[Architecture.md](ai-development-guidelines/Architecture.md)** — Project folder structure, logging strategy, exception hierarchy
-4. **[docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md)** — Database schema, enums, migration index
-5. **[docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md)** — API endpoints, request/response shapes
-6. **Relevant Epic** in `ai-development-guidelines/epics/` — Scope and acceptance criteria
-7. **Relevant User Story** in `ai-development-guidelines/stories/` — Behaviour, ACs, DoD
+3. **[FUNCTIONAL_LANDSCAPE.md](project-specific-guidelines/docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md)** — Complete module inventory, 7 layers, actor–module matrix
+4. **[ACTORS.md](project-specific-guidelines/docs/actors/ACTORS.md)** — Actor definitions, roles, permissions, data scoping
+5. **[Architecture.md](ai-development-guidelines/Architecture.md)** — Project folder structure, logging strategy, exception hierarchy
+6. **[docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md)** — Database schema, enums, migration index
+7. **[docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md)** — API endpoints, request/response shapes
+8. **Relevant Epic** in `ai-development-guidelines/epics/` — Scope and acceptance criteria
+9. **Relevant User Story** in `ai-development-guidelines/stories/` — Behaviour, ACs, DoD
 
 ---
 
@@ -51,16 +53,21 @@ Before writing any code, read in this order:
 | **API Spec** | Full API endpoints with request/response examples | [docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md) |
 | **DB Schema** | Complete schema, column types, enums, migration index | [docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md) |
 
-### Agile Planning
+### Discovery & Planning
 
-> **Sequence:** Epics → User Stories → Code. See [CLAUDE-Generic.md](ai-development-guidelines/CLAUDE-Generic.md) §2 for the full workflow.
+> **Full workflow:** See [EXECUTION_WORKFLOW.md](project-specific-guidelines/EXECUTION_WORKFLOW.md) for the complete Stage 0–7 sequence.
+> **Sequence:** Functional Landscape → Actors → PRD → Epics → User Stories → Code
 
 | Document | Layer | Purpose | Link |
 |---|---|---|---|
+| **Functional Landscape** | Project | 7-layer module inventory, actor–module matrix, out-of-scope | [docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md](project-specific-guidelines/docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md) |
+| **Actor Index** | Project | All actors, roles, permissions, RBAC rules | [docs/actors/ACTORS.md](project-specific-guidelines/docs/actors/ACTORS.md) |
+| **Landscape Rules — Jewelry AI** | Project | Layer definitions, module catalog, Jewelry AI-specific rules | [rules/functional-landscape-rules.md](project-specific-guidelines/rules/functional-landscape-rules.md) |
+| **Actor Rules — Jewelry AI** | Project | Actor definitions, role permissions, data scoping | [rules/actor-roles-rules.md](project-specific-guidelines/rules/actor-roles-rules.md) |
 | **Epic Rules** | Generic | Anatomy, lifecycle, sizing, INVEST | [rules/epic-rules.md](ai-development-guidelines/rules/epic-rules.md) |
 | **User Story Rules** | Generic | Format, Three Cs, GWT, splitting | [rules/user-story-rules.md](ai-development-guidelines/rules/user-story-rules.md) |
-| **Epic Rules — Jewelry AI** | Project | Platform catalog (EPIC-01–15), phases, API deps, DoD | [project-specific-guidelines/rules/epic-rules.md](project-specific-guidelines/rules/epic-rules.md) |
-| **User Story Rules — Jewelry AI** | Project | Actors, toolchain DoD, AC examples, story paths | [project-specific-guidelines/rules/user-story-rules.md](project-specific-guidelines/rules/user-story-rules.md) |
+| **Epic Rules — Jewelry AI** | Project | Platform catalog (EPIC-01–15), phases, API deps, DoD | [rules/epic-rules.md](project-specific-guidelines/rules/epic-rules.md) |
+| **User Story Rules — Jewelry AI** | Project | Actors, toolchain DoD, AC examples, story paths | [rules/user-story-rules.md](project-specific-guidelines/rules/user-story-rules.md) |
 
 ### Standards & Rules
 

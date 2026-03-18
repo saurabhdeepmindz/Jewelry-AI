@@ -53,6 +53,7 @@ STAGE 7: Continuous Quality   → Throughout all development phases
 | `docs/rules/actor-roles-rules.md` | `project-specific-guidelines/rules/actor-roles-rules.md` | ✅ Created |
 | `docs/rules/epic-rules.md` | `project-specific-guidelines/rules/epic-rules.md` | ✅ Created |
 | `docs/rules/user-story-rules.md` | `project-specific-guidelines/rules/user-story-rules.md` | ✅ Created |
+| `docs/rules/testing-rules.md` | `project-specific-guidelines/rules/testing-rules.md` | ✅ Created |
 
 **Artifact:** `project-specific-guidelines/rules/*.md` — project rules files
 
@@ -324,6 +325,7 @@ STAGE 7: Continuous Quality   → Throughout all development phases
 | 2.5 | `src/tasks/enrichment_tasks.py` — Celery async task |
 | 2.6 | `src/api/routers/enrichment.py` |
 | 2.7 | Alembic migration: `create_contacts` |
+| 2.8 | Unit + integration tests: cache-hit/miss, Apollo fallback to Hunter, 429 handling (80%+ coverage) |
 
 **Deliverable:** "Enrich" click → contact name, email, phone populated automatically.
 
@@ -342,6 +344,7 @@ STAGE 7: Continuous Quality   → Throughout all development phases
 | 3.6 | `src/api/routers/outreach.py` |
 | 3.7 | `src/ui/pages/outreach.py` — draft review + send |
 | 3.8 | SendGrid webhook handler for opens/clicks/replies |
+| 3.9 | Unit + integration tests: LangGraph node tests, human review gate, SendGrid mock (80%+ coverage) |
 
 **Deliverable:** Eligible lead → enriched → AI email drafted → reviewed → sent → opens tracked.
 
@@ -359,6 +362,7 @@ STAGE 7: Continuous Quality   → Throughout all development phases
 | 4.5 | n8n: 3-step email sequence workflow |
 | 4.6 | CRM auto-logging via event handlers (EPIC-07) |
 | 4.7 | Auth + RBAC implementation (EPIC-11) |
+| 4.8 | Unit + integration tests: RBAC role matrix, CRM immutability, n8n webhook mock (80%+ coverage) |
 
 **Deliverable:** CSV upload → zero clicks → full pipeline auto-runs.
 
@@ -374,6 +378,7 @@ STAGE 7: Continuous Quality   → Throughout all development phases
 | 5.3 | MLflow experiment tracking integration |
 | 5.4 | Score integration into lead pipeline (post-enrichment) |
 | 5.5 | `src/ui/pages/analytics.py` — scoring distribution chart (EPIC-09) |
+| 5.6 | Unit + integration tests: feature engineering, batch scoring task, MLflow registration mock (80%+ coverage) |
 
 **Deliverable:** Each lead has a 0–100 score; leads sorted by score in outreach queue.
 
@@ -387,9 +392,10 @@ STAGE 7: Continuous Quality   → Throughout all development phases
 | 6.1 | Pipeline funnel chart (Streamlit + Plotly) |
 | 6.2 | Outreach performance dashboard |
 | 6.3 | Lead source quality comparison |
-| 6.4 | End-to-end integration tests |
-| 6.5 | Security review (secrets audit, input validation) |
-| 6.6 | API docs + README + deployment guide |
+| 6.4 | Unit + integration tests: health endpoints, Prometheus metrics, rate limiting (80%+ coverage) |
+| 6.5 | End-to-end test: full lead lifecycle (E2E) |
+| 6.6 | Security review (secrets audit, input validation) |
+| 6.7 | API docs + README + deployment guide |
 
 **Deliverable:** Complete POC demo-ready with analytics.
 

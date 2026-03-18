@@ -22,8 +22,9 @@ Before writing any code, read in this order:
 5. **[Architecture.md](ai-development-guidelines/Architecture.md)** — Project folder structure, logging strategy, exception hierarchy
 6. **[docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md)** — Database schema, enums, migration index
 7. **[docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md)** — API endpoints, request/response shapes
-8. **Relevant Epic** in `ai-development-guidelines/epics/` — Scope and acceptance criteria
-9. **Relevant User Story** in `ai-development-guidelines/stories/` — Behaviour, ACs, DoD
+8. **[rules/testing-rules.md](ai-development-guidelines/rules/testing-rules.md)** — TDD workflow, pytest patterns, factory_boy, coverage gate
+9. **Relevant Epic** in `ai-development-guidelines/epics/` — Scope and acceptance criteria
+10. **Relevant User Story** in `ai-development-guidelines/stories/` — Behaviour, ACs, DoD
 
 ---
 

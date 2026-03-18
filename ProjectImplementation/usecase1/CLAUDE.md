@@ -41,8 +41,9 @@ Before writing any code, read in this order:
 5. **[docs/architecture/Architecture.md](docs/architecture/Architecture.md)** — Project folder structure, logging, exception hierarchy *(Stage 3)*
 6. **[docs/architecture/DB_SCHEMA.md](docs/architecture/DB_SCHEMA.md)** — Database schema, enums, migration index *(Stage 3)*
 7. **[docs/architecture/API_SPEC.md](docs/architecture/API_SPEC.md)** — API endpoints, request/response shapes *(Stage 3)*
-8. **Relevant Epic** in `agile/epics/` — Scope and acceptance criteria *(Stage 5)*
-9. **Relevant User Story** in `agile/stories/` — Behaviour, ACs, DoD *(Stage 5)*
+8. **[rules/testing-rules.md](rules/testing-rules.md)** — Unit/integration test patterns, factory_boy, mocking, coverage gate *(Stage 0)*
+9. **Relevant Epic** in `agile/epics/` — Scope and acceptance criteria *(Stage 5)*
+10. **Relevant User Story** in `agile/stories/` — Behaviour, ACs, DoD *(Stage 5)*
 
 ---
 
@@ -57,7 +58,8 @@ ProjectImplementation/usecase1/
 │   ├── functional-landscape-rules.md      ← Extends best-practices generic
 │   ├── actor-roles-rules.md               ← Extends best-practices generic
 │   ├── epic-rules.md                      ← Extends best-practices generic
-│   └── user-story-rules.md                ← Extends best-practices generic
+│   ├── user-story-rules.md                ← Extends best-practices generic
+│   └── testing-rules.md                   ← Extends best-practices generic (pytest, factory_boy, per-epic test index)
 │
 ├── docs/                                  ← Stage 1–4 artifacts
 │   ├── functional-landscape/
@@ -181,3 +183,4 @@ ProjectImplementation/usecase1/
 | [rules/actor-roles-rules.md](rules/actor-roles-rules.md) | `best-practices_rule_set_code/docs/rules/actor-roles-rules.md` | 5 actors, RBAC, data scoping rules |
 | [rules/epic-rules.md](rules/epic-rules.md) | `best-practices_rule_set_code/docs/rules/epic-rules.md` | 15-epic catalog, phases, DoD |
 | [rules/user-story-rules.md](rules/user-story-rules.md) | `best-practices_rule_set_code/docs/rules/user-story-rules.md` | Actor labels, toolchain DoD, AC examples |
+| [rules/testing-rules.md](rules/testing-rules.md) | `best-practices_rule_set_code/docs/rules/testing-rules.md` | pytest patterns, factory_boy, mocking, 80% coverage gate, per-epic test file index |

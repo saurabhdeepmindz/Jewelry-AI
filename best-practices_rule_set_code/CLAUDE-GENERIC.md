@@ -54,8 +54,10 @@ Before writing any code, read in this order:
 | Generic framework | `docs/rules/actor-roles-rules.md` | Actor types, RBAC design, role/permission model |
 | Generic framework | `docs/rules/epic-rules.md` | Epic anatomy, lifecycle, sizing, INVEST |
 | Generic framework | `docs/rules/user-story-rules.md` | Story format, Three Cs, GWT, splitting patterns |
+| Generic framework | `docs/rules/testing-rules.md` | TDD workflow, pytest patterns, factory_boy, mocking, coverage |
 | Project-specific | `<project-docs>/rules/epic-rules.md` | Project's epic catalog, phases, DoD |
 | Project-specific | `<project-docs>/rules/user-story-rules.md` | Project actors, toolchain DoD, AC examples |
+| Project-specific | `<project-docs>/rules/testing-rules.md` | Project test stack, domain-specific test patterns, CI gate |
 
 ---
 
@@ -93,7 +95,7 @@ Every project should maintain the following documentation categories. The specif
 | **Coding Standards** | Class boilerplate, docstrings, naming, type hints | [CodingStandards-python.md](./CodingStandards-python.md) |
 | **Coding Style** | Immutability, async patterns, file size, nesting limits | — |
 | **Security** | Secrets management, validation, auth, rate limiting |
-| **Testing** | TDD workflow, coverage threshold, test organisation |
+| **Testing** | TDD workflow, coverage threshold, test organisation | [testing-rules.md](./docs/rules/testing-rules.md) |
 | **API Design** | REST conventions, response format, versioning |
 | **Data / DB** | Schema conventions, migrations, soft deletes |
 | **Error & Observability** | Exception hierarchy, structured logging, correlation IDs |

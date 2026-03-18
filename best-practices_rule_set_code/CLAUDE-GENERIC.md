@@ -96,6 +96,7 @@ Every project should maintain the following documentation categories. The specif
 | **Coding Style** | Immutability, async patterns, file size, nesting limits | — |
 | **Security** | Secrets management, validation, auth, rate limiting |
 | **Testing** | TDD workflow, coverage threshold, test organisation | [testing-rules.md](./docs/rules/testing-rules.md) |
+| **Development Execution** | Incremental build standard, vertical slices, increment anatomy, gates | [development-execution.md](./docs/rules/development-execution.md) |
 | **API Design** | REST conventions, response format, versioning |
 | **Data / DB** | Schema conventions, migrations, soft deletes |
 | **Error & Observability** | Exception hierarchy, structured logging, correlation IDs |

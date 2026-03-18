@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.api.middleware import TraceIDMiddleware
-from src.api.routers import health
+from src.api.routers import health, leads
 from src.core.config import get_settings
 from src.core.exceptions import BaseAppException
 from src.core.logging import configure_logging, get_logger
@@ -43,10 +43,10 @@ def create_app() -> FastAPI:
     async def app_exception_handler(request: Request, exc: BaseAppException) -> JSONResponse:
         trace_id = getattr(request.state, "trace_id", None)
         logger.error(
-            "Application exception",
-            code=exc.code,
-            message=exc.message,
-            status_code=exc.status_code,
+            "Application exception code=%s message=%s status=%d",
+            exc.code,
+            exc.message,
+            exc.status_code,
         )
         return JSONResponse(
             status_code=exc.status_code,
@@ -61,18 +61,15 @@ def create_app() -> FastAPI:
 
     # ── Routers ───────────────────────────────────────────────────────────────
     app.include_router(health.router)
-    # Future routers added here in later increments:
-    # app.include_router(auth.router, prefix="/auth")
-    # app.include_router(leads.router, prefix="/api/v1")
-    # ...
+    app.include_router(leads.router)
 
     # ── Startup log ───────────────────────────────────────────────────────────
     @app.on_event("startup")
     async def on_startup() -> None:
         logger.info(
-            "Jewelry AI starting up",
-            env=_settings.APP_ENV,
-            version=_settings.APP_VERSION,
+            "Jewelry AI starting up env=%s version=%s",
+            _settings.APP_ENV,
+            _settings.APP_VERSION,
         )
 
     return app

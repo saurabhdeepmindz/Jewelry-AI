@@ -1,4 +1,4 @@
-# User Story Rules — Jewelry AI Platform
+# User Story Rules
 
 > **Source:** Atlassian Agile — User Stories (https://www.atlassian.com/agile/project-management/user-stories)
 > **Sequence:** User stories are created AFTER each Epic is defined. Every story MUST link to a parent Epic.
@@ -12,9 +12,9 @@ A **user story** is a short, simple description of a feature told from the persp
 > *"User stories are the building blocks of agile development. They are not specifications — they are an invitation to a conversation."* — Atlassian
 
 A user story is NOT:
-- A technical task (e.g., "Set up Redis connection pool") — that is a subtask
+- A technical task (e.g., "Configure the database connection pool") — that is a subtask
 - A bug report — bugs have their own workflow
-- A vague wish (e.g., "Make the app faster") — that is a non-functional requirement (NFR) epic
+- A vague wish (e.g., "Make the app faster") — that is a non-functional requirement captured in an NFR epic
 
 ---
 
@@ -61,15 +61,14 @@ Given <context/state>, when <action taken>, then <observable outcome>.
 *(minimum 3 acceptance criteria per story)*
 
 ### Definition of Done (DoD)
-- [ ] Code written following the layer architecture (router → service → repository)
-- [ ] Unit tests written (RED first, then GREEN)
-- [ ] Integration tests written for any new API endpoint
-- [ ] `ruff check` passes with zero errors
-- [ ] `mypy` passes with zero errors
-- [ ] `pytest --cov=src` reports ≥80% coverage
-- [ ] Alembic migration created for any schema change
-- [ ] API spec updated in `ai-development-guidelines/docs/API_SPEC.md` if endpoint added
-- [ ] DB schema updated in `ai-development-guidelines/docs/DB_SCHEMA.md` if table/column changed
+- [ ] Code written and follows the project's architectural conventions
+- [ ] Unit tests written (RED first, then GREEN — TDD)
+- [ ] Integration tests written for any new API endpoint or service boundary
+- [ ] Linting and type checking passes with zero errors
+- [ ] Test coverage meets or exceeds project minimum threshold
+- [ ] Database migration created for any schema change
+- [ ] API spec updated if a new endpoint is added
+- [ ] DB schema documentation updated if tables or columns change
 - [ ] Code reviewed and approved
 - [ ] Acceptance criteria above confirmed by assignee or story owner
 
@@ -77,7 +76,7 @@ Given <context/state>, when <action taken>, then <observable outcome>.
 | ID | Description | Assignee | Status |
 |---|---|---|---|
 | T-01 | <Technical task> | — | Todo |
-| T-02 | <Write unit tests for service method> | — | Todo |
+| T-02 | <Write unit tests> | — | Todo |
 
 ### Notes / Assumptions
 - <Any assumption made while writing this story>
@@ -117,27 +116,31 @@ Story points estimate complexity, effort, and uncertainty — not calendar hours
 | Points | Meaning | Examples |
 |---|---|---|
 | **1** | Trivial change, well-understood | Add a field to a response schema, update a config value |
-| **2** | Small, straightforward | CRUD endpoint for a known entity, simple DB query |
+| **2** | Small, straightforward | CRUD endpoint for a known entity, simple query |
 | **3** | Moderate, some unknowns | New service method with validation logic, external API call |
-| **5** | Complex, cross-layer | New LangGraph node + service + repository + tests |
-| **8** | Large, significant unknowns | New pipeline stage (e.g., enrichment agent + Celery task) |
+| **5** | Complex, cross-layer | New feature spanning multiple service/repository layers with tests |
+| **8** | Large, significant unknowns | New subsystem or pipeline stage with multiple integration points |
 | **13** | Epic-level — SPLIT THIS STORY | — |
 
 **Rule:** Any story estimated at 13 points must be split into two or more smaller stories before it enters a sprint.
 
 ---
 
-## Actor Reference — Jewelry AI Platform
+## Actor Definition
 
-Use these defined actors consistently across all user stories:
+Actors represent the roles or systems that interact with the product. Define actors in the project-specific guidelines before writing stories.
 
+**Template:**
+```
 | Actor | Description | Example Usage |
 |---|---|---|
-| `admin` | System administrator with full access | "As an **admin**, I want to configure enrichment API keys…" |
-| `manager` | Sales manager who approves outreach | "As a **manager**, I want to review AI-generated emails…" |
-| `rep` | Sales representative working assigned leads | "As a **rep**, I want to see matched inventory for a lead…" |
-| `system` | Automated process or background job | "As the **system**, I want to automatically re-score leads…" |
-| `buyer` | External jewelry buyer (future portal) | "As a **buyer**, I want to view available inventory…" |
+| `<role>` | <What this person/system does> | "As a <role>, I want…" |
+```
+
+Actors must be:
+- Defined once in the project-specific rules file
+- Used consistently — do not invent new actor names mid-sprint
+- Representative of a real role in the system (human or automated)
 
 ---
 
@@ -145,15 +148,15 @@ Use these defined actors consistently across all user stories:
 
 When a story is too large (>8 points), use these patterns to split it:
 
-| Pattern | How | Example |
-|---|---|---|
-| **By workflow step** | Split along process stages | Ingest → Validate → Persist = 3 stories |
-| **By user role** | Separate admin vs rep vs manager variants | Admin config vs rep view = 2 stories |
-| **By data variation** | Different input types | CSV upload vs API push = 2 stories |
-| **By acceptance criterion** | Each criterion becomes its own story | Matching + Scoring = 2 stories |
-| **By happy / sad path** | Core flow + error handling as separate stories | Lead matched + Lead not found = 2 stories |
-| **By CRUD operation** | Create / Read / Update / Delete separately | Add lead vs view lead = 2 stories |
-| **By read / write** | Read-only queries before write operations | Dashboard view before export = 2 stories |
+| Pattern | How to Split |
+|---|---|
+| **By workflow step** | Split along sequential process stages (e.g., validate → process → persist = 3 stories) |
+| **By user role** | Separate admin behaviour from regular user behaviour |
+| **By data variation** | Different input formats or data sources become separate stories |
+| **By acceptance criterion** | If ACs are independently shippable, each becomes its own story |
+| **By happy / sad path** | Core success flow as one story; error handling and edge cases as another |
+| **By CRUD operation** | Create, Read, Update, Delete can be delivered independently |
+| **By read / write** | Read-only view shipped before write operations |
 
 ---
 
@@ -167,18 +170,17 @@ When  <the user or system takes an action>
 Then  <a specific, observable, testable outcome occurs>
 ```
 
-**Good example (Jewelry AI context):**
+**Good example:**
 ```
-Given a lead with status "enriched" and at least one matched inventory item,
-When the rep clicks "Generate Outreach",
-Then the system creates an OutreachMessage record with tone="professional",
-  and the message body references the matched inventory item by SKU,
-  and the status is set to "pending_review".
+Given a registered user with an active account,
+When they submit the login form with valid credentials,
+Then they are redirected to the dashboard
+  and a session token is issued with a 24-hour expiry.
 ```
 
 **Bad example (too vague):**
 ```
-When the user generates outreach, it should look good and be relevant.
+When the user logs in, it should work correctly.
 ```
 
 ### Rules for Acceptance Criteria
@@ -186,16 +188,14 @@ When the user generates outreach, it should look good and be relevant.
 - Each criterion must be independently testable
 - Include both **happy path** (success) and **sad path** (validation failure, error) criteria
 - Never use subjective language: "fast", "good", "nice", "intuitive"
-- Always specify the observable state change (DB record, API response, UI message)
+- Always specify the observable state change (DB record, API response, UI message, redirect)
 
 ---
 
 ## Story File Location & Naming
 
-- Store story documents in: `ai-development-guidelines/stories/`
-- Organise by epic: `ai-development-guidelines/stories/EPIC-<ID>/`
-  - Example: `ai-development-guidelines/stories/EPIC-02/US-001-ingest-csv-leads.md`
-  - Example: `ai-development-guidelines/stories/EPIC-03/US-005-match-leads-to-inventory.md`
+- Store story documents organised by epic: `docs/stories/EPIC-<ID>/`
+  - Example: `docs/stories/EPIC-02/US-001-user-registration.md`
 - One file per story — do not combine multiple stories in one file
 - Story IDs are global sequential integers: `US-001`, `US-002`, … — not reset per epic
 
@@ -205,10 +205,10 @@ When the user generates outreach, it should look good and be relevant.
 
 Every user story file MUST include:
 1. The parent **Epic ID and title** in the frontmatter
-2. A reference back to the Epic file in `ai-development-guidelines/epics/EPIC-<ID>-*.md`
-3. The parent Epic's story table must be updated to include the new story
+2. A reference back to the Epic file
+3. The parent Epic's story table updated to include the new story
 
-**Rule:** A story without a parent epic must not be created. If no epic exists, create the epic first (`epic-rules.md`).
+**Rule:** A story without a parent epic must not be created. If no epic exists, create the epic first (see `epic-rules.md`).
 
 ---
 
@@ -236,15 +236,15 @@ Draft → Refined → Sprint Ready → In Progress → In Review → Done
 
 ## Story Index Template
 
-Maintain a story index in `ai-development-guidelines/stories/STORIES.md`:
+Maintain a story index file at `docs/stories/STORIES.md`:
 
 ```markdown
 # Story Index
 
 | Story ID | Title | Epic | Status | Points | Sprint |
 |---|---|---|---|---|---|
-| US-001 | Ingest leads from CSV upload | EPIC-02 | Done | 3 | Sprint 1 |
-| US-002 | Deduplicate leads on email | EPIC-02 | In Progress | 2 | Sprint 1 |
+| US-001 | <Story title> | EPIC-<ID> | Done | 3 | Sprint 1 |
+| US-002 | <Story title> | EPIC-<ID> | In Progress | 2 | Sprint 1 |
 ```
 
 ---
@@ -260,4 +260,4 @@ Maintain a story index in `ai-development-guidelines/stories/STORIES.md`:
 - **DoD explicit:** Every story carries the full Definition of Done checklist
 - **Subtasks for tech work:** Technical implementation details go in subtasks, not the story narrative
 - **Traceability maintained:** Parent epic's story table updated when a new story is created
-- **Story index kept current:** `ai-development-guidelines/stories/STORIES.md` updated after every story state change
+- **Story index kept current:** `docs/stories/STORIES.md` updated after every story state change

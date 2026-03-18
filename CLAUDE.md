@@ -48,10 +48,19 @@ Before writing any code, read in this order:
 
 > **Sequence:** Epics → User Stories → Code. Never write code without a parent story; never write a story without a parent epic.
 
+#### Generic Rules (framework-level, reusable across projects)
+
 | Document | Purpose | Link |
 |---|---|---|
-| **Epic Rules** | How to define, structure, and manage Epics before development | [rules/epic-rules.md](ai-development-guidelines/rules/epic-rules.md) |
-| **User Story Rules** | How to write, size, and accept User Stories linked to Epics | [rules/user-story-rules.md](ai-development-guidelines/rules/user-story-rules.md) |
+| **Epic Rules** | Epic anatomy, sizing, lifecycle, INVEST, file conventions | [rules/epic-rules.md](ai-development-guidelines/rules/epic-rules.md) |
+| **User Story Rules** | Story format, Three Cs, INVEST, GWT criteria, splitting patterns | [rules/user-story-rules.md](ai-development-guidelines/rules/user-story-rules.md) |
+
+#### Project-Specific Rules (Jewelry AI overrides and extensions)
+
+| Document | Purpose | Link |
+|---|---|---|
+| **Epic Rules — Jewelry AI** | Platform epic catalog (EPIC-01–15), delivery phases, external API dependencies, project DoD | [project-specific-guidelines/rules/epic-rules.md](project-specific-guidelines/rules/epic-rules.md) |
+| **User Story Rules — Jewelry AI** | Actor definitions, toolchain DoD, GWT examples, story storage paths | [project-specific-guidelines/rules/user-story-rules.md](project-specific-guidelines/rules/user-story-rules.md) |
 
 ### Standards & Rules
 

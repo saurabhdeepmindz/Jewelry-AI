@@ -1,4 +1,4 @@
-# Epic Rules — Jewelry AI Platform
+# Epic Rules
 
 > **Source:** Atlassian Agile — Epics (https://www.atlassian.com/agile/project-management/epics)
 > **Sequence:** Epics are created BEFORE any development begins. User stories are created after each Epic.
@@ -13,30 +13,30 @@ An **Epic** is a large body of work that can be broken down into smaller, delive
 - An epic is NOT a sprint — it spans multiple sprints
 - An epic IS the parent of user stories — stories are the children that deliver the epic
 
-**Rule:** Every feature, module, or initiative in the Jewelry AI platform MUST be represented as an Epic before any user stories or code are written.
+**Rule:** Every feature, module, or initiative MUST be represented as an Epic before any user stories or code are written.
 
 ---
 
 ## Epic Anatomy
 
-Every epic in this project must have the following structure:
+Every epic must have the following structure:
 
 ```markdown
 ## EPIC-<ID>: <Title>
 
-**Status:** Draft | Active | In Progress | Done | Cancelled
+**Status:** Draft | Refined | Active | In Progress | Done | Cancelled
 **Owner:** <role or team member>
 **Priority:** Critical | High | Medium | Low
-**Phase:** Phase 0 — Foundation | Phase 1 — POC | Phase 2 — Alpha | Phase 3 — Beta | Phase 4 — GA
+**Phase:** <Phase name from project delivery plan>
 **Sprint Target:** <sprint range, e.g., Sprint 1–3>
 **Created:** YYYY-MM-DD
 **Updated:** YYYY-MM-DD
 
 ### Business Goal
-<One paragraph. What business problem does this solve for Shivam Jewels? Tie to PRD epics.>
+<One paragraph. What business problem does this solve? Tie to PRD epics.>
 
 ### Business Value
-<Quantified or qualified value: e.g., "Reduces manual lead processing from 4h/day to zero", "Enables outreach to 500+ buyers per week">
+<Quantified or qualified value — what changes for the end user or business when this is done?>
 
 ### Scope (In / Out)
 
@@ -58,14 +58,14 @@ Every epic in this project must have the following structure:
 | Depends On | Type | Notes |
 |---|---|---|
 | EPIC-<ID> | Blocking | Must complete before this epic starts |
-| External API: Apollo.io | Integration | Enrichment cannot proceed without Apollo key |
+| <External system or API> | Integration | Reason this is a dependency |
 
 ### Definition of Done
 - [ ] All child user stories are completed and accepted
 - [ ] Acceptance criteria above are all met and verified
-- [ ] Code reviewed, tests passing at 80%+ coverage
+- [ ] Code reviewed, tests passing at the required coverage threshold
 - [ ] API spec and DB schema updated if applicable
-- [ ] Documentation updated in `ai-development-guidelines/`
+- [ ] Documentation updated
 - [ ] Feature deployed to staging and smoke-tested
 ```
 
@@ -74,13 +74,13 @@ Every epic in this project must have the following structure:
 ## How to Write a Good Epic
 
 ### 1. Tie to the PRD
-Every epic must map to an epic or feature area in `ai-development-guidelines/PRD.md`. Reference the PRD epic ID in the title or body. Do not invent features that are not in the PRD without stakeholder sign-off.
+Every epic must map to a requirement or feature area in the project PRD. Reference the PRD item in the epic body. Do not invent features without stakeholder sign-off.
 
 ### 2. Define the Business Goal First
-Before writing acceptance criteria or stories, answer: **"What does Shivam Jewels gain when this epic is done?"**
+Before writing acceptance criteria or stories, answer: **"What does the business or user gain when this epic is done?"**
 
-Good: *"Sales reps can view AI-matched inventory suggestions for each lead without any manual SQL queries."*
-Bad: *"Build a matching service."*
+Good: *"Users can complete the full onboarding flow without leaving the app."*
+Bad: *"Build an onboarding module."*
 
 ### 3. Write Measurable Acceptance Criteria
 Acceptance criteria must be testable by a human or automated test. Use the format:
@@ -91,15 +91,15 @@ Acceptance criteria must be testable by a human or automated test. Use the forma
 Explicitly document what is OUT of scope. This prevents scope creep and gives the team permission to defer related-but-separate work to a future epic.
 
 ### 5. Set the Phase and Priority
-Map every epic to a delivery phase from `ai-development-guidelines/Plan.md`:
-- **Phase 0** — Foundation (infra, config, scaffolding)
-- **Phase 1** — POC (end-to-end demo flow)
+Map every epic to a delivery phase from the project plan:
+- **Phase 0** — Foundation (infrastructure, configuration, scaffolding)
+- **Phase 1** — POC / MVP (end-to-end demo or initial release)
 - **Phase 2** — Alpha (core features, internal users)
 - **Phase 3** — Beta (external users, hardening)
 - **Phase 4** — GA (production, scale)
 
 ### 6. Identify Dependencies Early
-Block all child stories on dependency resolution. If an epic depends on an external API key (Apollo, Hunter, SendGrid), flag it as a blocker before sprint planning.
+Flag any epic or external dependency that must be resolved before this epic can start. Block child stories accordingly before sprint planning.
 
 ---
 
@@ -113,31 +113,7 @@ Block all child stories on dependency resolution. If an epic depends on an exter
 | L | Platform capability, multiple services | 8–15 stories | 3–5 sprints |
 | XL | Major platform initiative | 15+ stories | 5+ sprints — SPLIT this epic |
 
-**Rule:** If an epic has more than 15 user stories or spans more than 5 sprints, split it into two or more child epics with a parent theme.
-
----
-
-## Jewelry AI Platform Epics
-
-The following epics are defined from `ai-development-guidelines/PRD.md`. Create detailed Epic documents (using the anatomy above) in `ai-development-guidelines/epics/` before starting any phase.
-
-| Epic ID | Title | Phase | Priority |
-|---|---|---|---|
-| EPIC-01 | Platform Foundation & Infrastructure | Phase 0 | Critical |
-| EPIC-02 | Lead Ingestion & Deduplication | Phase 1 | Critical |
-| EPIC-03 | AI Inventory Matching Engine | Phase 1 | Critical |
-| EPIC-04 | Contact Enrichment Pipeline | Phase 1 | High |
-| EPIC-05 | AI Outreach Generation & Review | Phase 1 | High |
-| EPIC-06 | Email Delivery & Tracking | Phase 2 | High |
-| EPIC-07 | CRM Activity & Audit Log | Phase 2 | Medium |
-| EPIC-08 | Lead Scoring & Prioritization | Phase 2 | High |
-| EPIC-09 | Streamlit Dashboard & UI | Phase 2 | Medium |
-| EPIC-10 | n8n Workflow Automation | Phase 2 | Medium |
-| EPIC-11 | Authentication & Role-Based Access | Phase 2 | Critical |
-| EPIC-12 | WhatsApp Outreach Channel (Twilio) | Phase 3 | Medium |
-| EPIC-13 | MLflow Experiment Tracking & Model Registry | Phase 3 | Low |
-| EPIC-14 | Performance, Caching & Scale Hardening | Phase 4 | Medium |
-| EPIC-15 | Observability, Monitoring & Alerting | Phase 4 | High |
+**Rule:** If an epic has more than 15 user stories or spans more than 5 sprints, split it into two or more child epics under a shared parent theme.
 
 ---
 
@@ -145,16 +121,16 @@ The following epics are defined from `ai-development-guidelines/PRD.md`. Create 
 
 ```
 Draft → Refined → Active → In Progress → Done
-                              ↓
-                          Cancelled (if de-prioritised)
+                                ↓
+                           Cancelled (if de-prioritised)
 ```
 
 | State | Meaning | Gate to Next |
 |---|---|---|
-| **Draft** | Epic identified, not yet fully defined | Epic anatomy complete |
+| **Draft** | Epic identified, anatomy incomplete | Epic anatomy fully written |
 | **Refined** | Acceptance criteria written, stories created | Sprint planning picks it up |
-| **Active** | Sprint work has started on child stories | N/A |
-| **In Progress** | At least one story is in development | N/A |
+| **Active** | Sprint work has started on child stories | — |
+| **In Progress** | At least one story is in development | — |
 | **Done** | All stories done, DoD met, accepted by owner | Owner sign-off |
 | **Cancelled** | De-scoped; record rationale in the document | — |
 
@@ -162,11 +138,12 @@ Draft → Refined → Active → In Progress → Done
 
 ## File Location & Naming
 
-- Store epic documents in: `ai-development-guidelines/epics/`
+- Store epic documents in: `docs/epics/` (or the project-equivalent documentation folder)
 - File name pattern: `EPIC-<ID>-<slug>.md`
   - Example: `EPIC-01-platform-foundation.md`
-  - Example: `EPIC-03-inventory-matching-engine.md`
+  - Example: `EPIC-02-user-authentication.md`
 - One file per epic — do not combine multiple epics in one file
+- Maintain an epic index file: `docs/epics/EPICS.md`
 
 ---
 
@@ -177,6 +154,6 @@ Draft → Refined → Active → In Progress → Done
 - **Scoped:** Every epic has explicit In/Out of scope boundaries
 - **Measurable:** Every epic has at least three testable acceptance criteria
 - **Phased:** Every epic is assigned to exactly one delivery phase
-- **Documented:** Epic file created in `ai-development-guidelines/epics/` before first sprint
+- **Documented:** Epic file created before the first sprint that works on its stories
 - **Linked:** Every child user story references its parent epic ID (`EPIC-<ID>`)
 - **Closed-loop:** Epic is not marked Done until all child stories are Done and DoD is verified

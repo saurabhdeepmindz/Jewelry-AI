@@ -49,8 +49,12 @@ HTTP Routers  →  Services  →  Repositories  →  DB Models  →  PostgreSQL
 
 ## 3. Domain-Specific Rules
 
+> **Agile Planning Sequence:** Epics → User Stories → Code. Read Epic and User Story rules before any development sprint begins.
+
 | Domain | Rules File |
 |---|---|
+| **Epic Definition** | [rules/epic-rules.md](rules/epic-rules.md) |
+| **User Stories** | [rules/user-story-rules.md](rules/user-story-rules.md) |
 | **Coding Style** | [rules/coding-style-rules.md](rules/coding-style-rules.md) |
 | **Security** | [rules/security-rules.md](rules/security-rules.md) |
 | **Testing & Quality** | [rules/testing-rules.md](rules/testing-rules.md) |

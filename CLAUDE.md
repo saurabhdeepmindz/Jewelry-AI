@@ -44,6 +44,15 @@ Before writing any code, read in this order:
 | **API Spec** | Full API endpoints with request/response examples | [docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md) |
 | **DB Schema** | Complete schema, column types, enums, migration index | [docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md) |
 
+### Agile Planning (Epic-First Workflow)
+
+> **Sequence:** Epics → User Stories → Code. Never write code without a parent story; never write a story without a parent epic.
+
+| Document | Purpose | Link |
+|---|---|---|
+| **Epic Rules** | How to define, structure, and manage Epics before development | [rules/epic-rules.md](ai-development-guidelines/rules/epic-rules.md) |
+| **User Story Rules** | How to write, size, and accept User Stories linked to Epics | [rules/user-story-rules.md](ai-development-guidelines/rules/user-story-rules.md) |
+
 ### Standards & Rules
 
 | Document | Purpose | Link |

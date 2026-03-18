@@ -5,16 +5,23 @@
 **Stack:** Python 3.11+, FastAPI, LangChain, LangGraph, PostgreSQL + pgvector, Redis, Celery, n8n, Streamlit
 **Purpose:** AI-powered lead automation platform for Shivam Jewels — transforms raw trade lists into enriched, scored, and outreached buyer relationships with zero manual intervention.
 
+> **Generic operating principles, agile workflow, layer architecture, code quality, and documentation structure patterns are defined in:**
+> **[ai-development-guidelines/CLAUDE-Generic.md](ai-development-guidelines/CLAUDE-Generic.md)**
+> Read that file first. This file adds Jewelry AI-specific context, links, and commands on top of it.
+
 ---
 
-## How to Use This Repo
+## Pre-Code Reading Order
 
 Before writing any code, read in this order:
 
-1. **[Rules.md](ai-development-guidelines/Rules.md)** — Master engineering rules (non-negotiables, layer architecture, checklist)
-2. **[Architecture.md](ai-development-guidelines/Architecture.md)** — Project structure, logging strategy, exception hierarchy
-3. **[docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md)** — Database schema, enums, migration index
-4. **[docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md)** — API endpoints, request/response shapes
+1. **[CLAUDE-Generic.md](ai-development-guidelines/CLAUDE-Generic.md)** — Generic operating principles, layer architecture, agile workflow
+2. **[Rules.md](ai-development-guidelines/Rules.md)** — Master engineering rules (non-negotiables, architecture, quality checklist)
+3. **[Architecture.md](ai-development-guidelines/Architecture.md)** — Project folder structure, logging strategy, exception hierarchy
+4. **[docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md)** — Database schema, enums, migration index
+5. **[docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md)** — API endpoints, request/response shapes
+6. **Relevant Epic** in `ai-development-guidelines/epics/` — Scope and acceptance criteria
+7. **Relevant User Story** in `ai-development-guidelines/stories/` — Behaviour, ACs, DoD
 
 ---
 
@@ -44,23 +51,16 @@ Before writing any code, read in this order:
 | **API Spec** | Full API endpoints with request/response examples | [docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md) |
 | **DB Schema** | Complete schema, column types, enums, migration index | [docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md) |
 
-### Agile Planning (Epic-First Workflow)
+### Agile Planning
 
-> **Sequence:** Epics → User Stories → Code. Never write code without a parent story; never write a story without a parent epic.
+> **Sequence:** Epics → User Stories → Code. See [CLAUDE-Generic.md](ai-development-guidelines/CLAUDE-Generic.md) §2 for the full workflow.
 
-#### Generic Rules (framework-level, reusable across projects)
-
-| Document | Purpose | Link |
-|---|---|---|
-| **Epic Rules** | Epic anatomy, sizing, lifecycle, INVEST, file conventions | [rules/epic-rules.md](ai-development-guidelines/rules/epic-rules.md) |
-| **User Story Rules** | Story format, Three Cs, INVEST, GWT criteria, splitting patterns | [rules/user-story-rules.md](ai-development-guidelines/rules/user-story-rules.md) |
-
-#### Project-Specific Rules (Jewelry AI overrides and extensions)
-
-| Document | Purpose | Link |
-|---|---|---|
-| **Epic Rules — Jewelry AI** | Platform epic catalog (EPIC-01–15), delivery phases, external API dependencies, project DoD | [project-specific-guidelines/rules/epic-rules.md](project-specific-guidelines/rules/epic-rules.md) |
-| **User Story Rules — Jewelry AI** | Actor definitions, toolchain DoD, GWT examples, story storage paths | [project-specific-guidelines/rules/user-story-rules.md](project-specific-guidelines/rules/user-story-rules.md) |
+| Document | Layer | Purpose | Link |
+|---|---|---|---|
+| **Epic Rules** | Generic | Anatomy, lifecycle, sizing, INVEST | [rules/epic-rules.md](ai-development-guidelines/rules/epic-rules.md) |
+| **User Story Rules** | Generic | Format, Three Cs, GWT, splitting | [rules/user-story-rules.md](ai-development-guidelines/rules/user-story-rules.md) |
+| **Epic Rules — Jewelry AI** | Project | Platform catalog (EPIC-01–15), phases, API deps, DoD | [project-specific-guidelines/rules/epic-rules.md](project-specific-guidelines/rules/epic-rules.md) |
+| **User Story Rules — Jewelry AI** | Project | Actors, toolchain DoD, AC examples, story paths | [project-specific-guidelines/rules/user-story-rules.md](project-specific-guidelines/rules/user-story-rules.md) |
 
 ### Standards & Rules
 
@@ -90,19 +90,46 @@ Before writing any code, read in this order:
 
 ---
 
-## Operating Mode
+## Domain Context
 
-You are the **principal architect and senior engineer** for this repository.
+### Business Domain
+Jewelry wholesale lead automation — Shivam Jewels sources diamond buyers from trade directories, matches them against live inventory, enriches their contacts, and sends personalized AI-generated outreach.
 
-- Extend existing patterns before introducing new ones
-- Respect the layer architecture: `routers → services → repositories → DB models`
-- AI orchestration lives in `src/agents/` — never call LLM APIs directly in services
-- Background jobs go in `src/tasks/` — never fire-and-forget in FastAPI handlers
-- Keep files focused: 200–400 lines typical, 800 lines maximum
-- Write tests BEFORE implementation (TDD mandatory)
-- Run `ruff`, `mypy`, and `pytest` after every change
-- Check `Rules.md` before introducing any new module, service, or migration
-- When a domain-specific rules file exists (e.g., `rules/ai-ml-rules.md`), follow it precisely
+### User Roles
+| Role | Description | Key Permissions |
+|---|---|---|
+| `admin` | System administrator | Full platform access, config management |
+| `manager` | Sales manager | View all leads, approve outreach, configure rules |
+| `rep` | Sales representative | View assigned leads, manage own outreach |
+
+### Core Domain Entities
+| Entity | Description | Key Relations |
+|---|---|---|
+| `Lead` | A jewelry buyer prospect (company) | Has contacts, matches, outreach messages |
+| `Inventory` | A diamond/jewelry item in Shivam's stock | Matched to leads |
+| `Contact` | Enriched buyer contact at a lead company | Belongs to lead |
+| `OutreachMessage` | AI-generated email or WhatsApp message | Belongs to lead + contact |
+| `CRMActivity` | Immutable audit event log entry | Belongs to lead |
+
+### Key Business Rules
+- A lead is only eligible for outreach if it matches at least one available inventory item
+- Outreach requires human review before sending (configurable via `HUMAN_REVIEW_REQUIRED`)
+- Enrichment API credits are finite — cache all results; never re-enrich an already enriched lead
+- CRM activity is append-only and immutable — never update or delete `crm_activity` rows
+- Diamond carat weights follow GIA grading standards — always 2 decimal places
+
+### External Integrations
+| Service | Purpose | Library |
+|---|---|---|
+| Apollo.io | Contact enrichment (email, phone, title) | `httpx` async client |
+| Hunter.io | Email deliverability verification | `httpx` async client |
+| Proxycurl | LinkedIn profile enrichment | `httpx` async client |
+| SendGrid | Transactional + campaign email | `sendgrid` SDK |
+| Twilio | WhatsApp outreach (Phase 2) | `twilio` SDK |
+| n8n | Workflow automation for email sequences | REST webhook trigger |
+| OpenAI | Outreach generation, embeddings | `langchain_openai` |
+| Anthropic | Fallback LLM, reasoning agents | `langchain_anthropic` |
+| MLflow | ML experiment tracking and model registry | `mlflow` |
 
 ---
 
@@ -173,56 +200,13 @@ pip install -e ".[dev]"
 
 ---
 
-## Domain Context
-
-### Business Domain
-Jewelry wholesale lead automation — Shivam Jewels sources diamond buyers from trade directories, matches them against live inventory, enriches their contacts, and sends personalized AI-generated outreach.
-
-### User Roles
-| Role | Description | Key Permissions |
-|---|---|---|
-| `admin` | System administrator | Full platform access, config management |
-| `manager` | Sales manager | View all leads, approve outreach, configure rules |
-| `rep` | Sales representative | View assigned leads, manage own outreach |
-
-### Core Domain Entities
-| Entity | Description | Key Relations |
-|---|---|---|
-| `Lead` | A jewelry buyer prospect (company) | Has contacts, matches, outreach messages |
-| `Inventory` | A diamond/jewelry item in Shivam's stock | Matched to leads |
-| `Contact` | Enriched buyer contact at a lead company | Belongs to lead |
-| `OutreachMessage` | AI-generated email or WhatsApp message | Belongs to lead + contact |
-| `CRMActivity` | Immutable audit event log entry | Belongs to lead |
-
-### Key Business Rules
-- A lead is only eligible for outreach if it matches at least one available inventory item
-- Outreach requires human review before sending (configurable via `HUMAN_REVIEW_REQUIRED`)
-- Enrichment API credits are finite — cache all results; never re-enrich an already enriched lead
-- CRM activity is append-only and immutable — never update or delete `crm_activity` rows
-- Diamond carat weights follow GIA grading standards — always 2 decimal places
-
-### External Integrations
-| Service | Purpose | Library |
-|---|---|---|
-| Apollo.io | Contact enrichment (email, phone, title) | `httpx` async client |
-| Hunter.io | Email deliverability verification | `httpx` async client |
-| Proxycurl | LinkedIn profile enrichment | `httpx` async client |
-| SendGrid | Transactional + campaign email | `sendgrid` SDK |
-| Twilio | WhatsApp outreach (Phase 2) | `twilio` SDK |
-| n8n | Workflow automation for email sequences | REST webhook trigger |
-| OpenAI | Outreach generation, embeddings | `langchain_openai` |
-| Anthropic | Fallback LLM, reasoning agents | `langchain_anthropic` |
-| MLflow | ML experiment tracking and model registry | `mlflow` |
-
----
-
 ## Windows Developer Notes
 
 This project is **fully supported on Windows** via Docker Desktop + Git Bash. See [rules/devops-deployment.md](ai-development-guidelines/rules/devops-deployment.md) → *Windows Developer Setup* section for:
 - Shell recommendation (Git Bash vs WSL2 vs PowerShell)
 - `make` ↔ PowerShell command equivalents
 - Virtual environment activation on Windows
-- Line ending setup (`.gitattributes` — required)
+- Line ending setup (`.gitattributes` — required first step)
 - `pathlib.Path` rule (no hardcoded `/` or `\` separators)
 - Cross-platform URL-open pattern (`webbrowser.open()`)
 

@@ -73,12 +73,12 @@ Every project should maintain the following documentation categories. The specif
 | **Execution Plan** | Phase-by-phase SDLC plan with task checklists |
 
 ### Architecture & Design
-| Category | Content |
-|---|---|
-| **Architecture** | Project folder structure, logging, exception hierarchy |
-| **HLD** | System diagram, deployment diagram, integration flow |
-| **LLD** | API endpoints, domain models, workflow nodes, background tasks |
-| **Design Patterns** | Key patterns in use (Repository, Strategy, Factory, State Machine, etc.) |
+| Category | Content | Generic Template |
+|---|---|---|
+| **Architecture** | Project folder structure, logging, exception hierarchy | — |
+| **HLD** | System diagram, deployment diagram, integration flow | [HLD.md](./HLD.md) |
+| **LLD** | API endpoints, domain models, workflow nodes, background tasks | [LLD.md](./LLD.md) |
+| **Design Patterns** | Key patterns in use (Repository, Strategy, Factory, State Machine, etc.) | [DesignPatterns.md](./DesignPatterns.md) |
 
 ### Living Specifications
 | Category | Content |
@@ -87,11 +87,11 @@ Every project should maintain the following documentation categories. The specif
 | **DB Schema** | Complete schema, column types, enums, migration index |
 
 ### Standards & Rules
-| Category | Content |
-|---|---|
-| **Master Rules** | Non-negotiables, layer architecture, code quality checklist |
-| **Coding Standards** | Class boilerplate, docstrings, naming, type hints |
-| **Coding Style** | Immutability, async patterns, file size, nesting limits |
+| Category | Content | Generic Template |
+|---|---|---|
+| **Master Rules** | Non-negotiables, layer architecture, code quality checklist | — |
+| **Coding Standards** | Class boilerplate, docstrings, naming, type hints | [CodingStandards-python.md](./CodingStandards-python.md) |
+| **Coding Style** | Immutability, async patterns, file size, nesting limits | — |
 | **Security** | Secrets management, validation, auth, rate limiting |
 | **Testing** | TDD workflow, coverage threshold, test organisation |
 | **API Design** | REST conventions, response format, versioning |

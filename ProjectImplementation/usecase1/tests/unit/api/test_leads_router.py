@@ -2,12 +2,9 @@
 
 TDD: Celery tasks and job store are mocked — no Redis or worker required.
 """
-import json
 import uuid
-from io import BytesIO
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from httpx import AsyncClient
 
 

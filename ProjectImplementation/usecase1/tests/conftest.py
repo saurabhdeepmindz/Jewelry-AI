@@ -29,8 +29,9 @@ os.environ.setdefault("HUNTER_API_KEY", "test-hunter-key")
 os.environ.setdefault("SENDGRID_API_KEY", "test-sendgrid-key")
 os.environ.setdefault("SENDGRID_FROM_EMAIL", "test@example.com")
 
-import pytest  # noqa: E402 — after env setup
-from src.core.config import get_settings  # noqa: E402
+import pytest
+
+from src.core.config import get_settings
 
 
 @pytest.fixture(autouse=True)

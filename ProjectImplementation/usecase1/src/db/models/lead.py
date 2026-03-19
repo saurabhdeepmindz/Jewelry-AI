@@ -1,6 +1,6 @@
 """SQLAlchemy ORM model for the leads table."""
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, Index, String, text
 from sqlalchemy.dialects.postgresql import UUID
@@ -10,7 +10,7 @@ from src.db.base import Base
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Lead(Base):

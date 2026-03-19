@@ -3,7 +3,6 @@
 TDD: Each exception must have the correct HTTP status code and inherit correctly.
 Run: pytest tests/unit/core/test_exceptions.py -v
 """
-import pytest
 from src.core.exceptions import (
     ApolloAPIException,
     AuthException,
@@ -19,9 +18,9 @@ from src.core.exceptions import (
     EnrichmentRateLimitError,
     ImmutableRecordError,
     InfrastructureException,
+    InsufficientPermissionsException,
     IntegrationException,
     InvalidCredentialsException,
-    InsufficientPermissionsException,
     InventoryNotFoundException,
     LeadNotEligibleException,
     LeadNotFoundException,

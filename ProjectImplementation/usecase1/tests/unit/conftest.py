@@ -3,7 +3,6 @@
 Unit tests mock all external dependencies (DB, Redis, HTTP).
 The async_client here does NOT require a real database.
 """
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 

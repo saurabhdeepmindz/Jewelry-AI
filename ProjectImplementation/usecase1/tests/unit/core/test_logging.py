@@ -9,9 +9,7 @@ Run: pytest tests/unit/core/test_logging.py -v
 import json
 import logging
 
-import pytest
-
-from src.core.logging import _JSONFormatter, configure_logging, get_logger, trace_id_var
+from src.core.logging import _JSONFormatter, get_logger, trace_id_var
 
 
 def _make_record(message: str, level: int = logging.INFO, name: str = "test") -> logging.LogRecord:

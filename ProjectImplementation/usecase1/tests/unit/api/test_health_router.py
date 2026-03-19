@@ -5,7 +5,6 @@ Run: pytest tests/unit/api/test_health_router.py -v
 """
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from httpx import AsyncClient
 
 

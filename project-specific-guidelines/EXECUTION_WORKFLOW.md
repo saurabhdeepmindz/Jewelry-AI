@@ -13,6 +13,7 @@ STAGE 0: Framework Setup      → Read best-practices; create project CLAUDE.md
 STAGE 1: Discovery            → Functional Landscape + Actors
 STAGE 2: Requirements         → Ideas, PRD
 STAGE 3: Architecture         → Architecture, HLD, LLD, DB Schema, API Spec
+STAGE 3.6: UI Wireframes      → HTML wireframe mockups for all UI screens
 STAGE 4: Design Patterns      → Design Patterns, Coding Standards
 STAGE 5: Agile Planning       → Epics, User Stories
 STAGE 6: Development          → Phase 0 → Phase 8 (code + tests)
@@ -188,6 +189,59 @@ STAGE 7: Continuous Quality   → Throughout all development phases
 **Must cover:** All REST endpoints grouped by domain, request body schemas, response envelope format, error response shapes, authentication headers, pagination patterns.
 
 **Artifact:** `ai-development-guidelines/docs/API_SPEC.md` ✅ Created
+
+---
+
+## STAGE 3.6 — UI Wireframes
+
+> **Goal:** Produce a visual reference for every user-facing screen before user stories are written. Wireframes translate the API Spec into screen layouts, capture actor-specific access rules, and give acceptance criteria a visual anchor.
+> **Prerequisite:** Stage 3.5 (API Spec) must be complete — wireframes annotate API fields directly.
+> **Output consumed by:** Stage 5 (Agile Planning) — user story acceptance criteria reference wireframe annotations.
+> **Generic rules:** `best-practices_rule_set_code/docs/rules/ui-wireframe-rules.md`
+> **Project rules:** `project-specific-guidelines/rules/ui-wireframe-rules.md`
+
+### Step 3.6.1 — Read Wireframe Rules
+**Action:** Review both the generic and project-specific wireframe rules files before creating any HTML files.
+
+| File | Purpose |
+|---|---|
+| `best-practices_rule_set_code/docs/rules/ui-wireframe-rules.md` | HTML format, file naming, component library, DoD checklist |
+| `project-specific-guidelines/rules/ui-wireframe-rules.md` | Jewelry AI screen catalog, actor-screen matrix, API field bindings |
+
+---
+
+### Step 3.6.2 — Create HTML Wireframe Files
+
+**Naming convention:** `WF-NNN-<kebab-slug>.html` — stored in `project-specific-guidelines/docs/wireframes/`
+
+**Jewelry AI Screen Catalog:**
+
+| File | Screen | Actors | Status |
+|---|---|---|---|
+| `WF-000-screen-index.html` | Master index — links all screens | — | ✅ Created |
+| `WF-001-login.html` | Login / authentication | public | ✅ Created |
+| `WF-002-lead-pipeline-dashboard.html` | Lead pipeline dashboard | admin, manager, rep | ✅ Created |
+| `WF-003-lead-detail-view.html` | Lead detail view | admin, manager, rep | ✅ Created |
+| `WF-004-outreach-review-queue.html` | Outreach review queue | admin, manager | ✅ Created |
+| `WF-005-analytics-funnel.html` | Analytics & funnel | admin, manager | ✅ Created |
+| `WF-006-admin-users.html` | Admin — user & API key management | admin | ✅ Created |
+| `WF-007-csv-upload.html` | CSV upload & job status | admin, manager, rep | ✅ Created |
+
+**Artifacts:** `project-specific-guidelines/docs/wireframes/*.html` ✅ All Created
+
+---
+
+### Step 3.6.3 — Link Wireframes to User Stories
+**Action:** When writing user stories for UI screens (EPIC-09, EPIC-11), add a `## Wireframe` section referencing the relevant HTML file and annotation IDs that map to acceptance criteria.
+
+**Stories that reference wireframes:**
+- US-032 → WF-002 (Lead Pipeline Dashboard)
+- US-033 → WF-003 (Lead Detail View)
+- US-034 → WF-004 (Outreach Review Queue)
+- US-035 → WF-005 (Analytics Funnel)
+- US-039 → WF-001 (Login)
+- US-041 → WF-006 (Admin Users)
+- US-006 → WF-007 (CSV Upload)
 
 ---
 
@@ -463,6 +517,9 @@ Complete index of all artifacts and their locations:
 | LLD | `project-specific-guidelines/LLD.md` | ✅ |
 | DB Schema | `ai-development-guidelines/docs/DB_SCHEMA.md` | ✅ |
 | API Spec | `ai-development-guidelines/docs/API_SPEC.md` | ✅ |
+| **UI Wireframe Rules (generic)** | `best-practices_rule_set_code/docs/rules/ui-wireframe-rules.md` | ✅ |
+| **UI Wireframe Rules (Jewelry AI)** | `project-specific-guidelines/rules/ui-wireframe-rules.md` | ✅ |
+| **HTML Wireframes** | `project-specific-guidelines/docs/wireframes/WF-00*.html` | ✅ |
 | Design Patterns | `project-specific-guidelines/DesignPatterns.md` | ✅ |
 | Coding Standards | `project-specific-guidelines/CodingStandards.md` | ✅ |
 | Epic catalog (summary) | `project-specific-guidelines/rules/epic-rules.md` | ✅ |

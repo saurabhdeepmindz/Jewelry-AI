@@ -22,6 +22,7 @@ Before writing any code, read in this order:
 5. **[Architecture.md](ai-development-guidelines/Architecture.md)** — Project folder structure, logging strategy, exception hierarchy
 6. **[docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md)** — Database schema, enums, migration index
 7. **[docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md)** — API endpoints, request/response shapes
+7.5. **[docs/wireframes/](project-specific-guidelines/docs/wireframes/)** — HTML wireframe mockups for all UI screens (WF-000 to WF-007)
 8. **[rules/testing-rules.md](ai-development-guidelines/rules/testing-rules.md)** — TDD workflow, pytest patterns, factory_boy, coverage gate
 9. **Relevant Epic** in `ai-development-guidelines/epics/` — Scope and acceptance criteria
 10. **Relevant User Story** in `ai-development-guidelines/stories/` — Behaviour, ACs, DoD
@@ -53,11 +54,12 @@ Before writing any code, read in this order:
 |---|---|---|
 | **API Spec** | Full API endpoints with request/response examples | [docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md) |
 | **DB Schema** | Complete schema, column types, enums, migration index | [docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md) |
+| **UI Wireframes** | HTML mockups for all 7 Streamlit screens with API annotations | [docs/wireframes/](project-specific-guidelines/docs/wireframes/) |
 
 ### Discovery & Planning
 
 > **Full workflow:** See [EXECUTION_WORKFLOW.md](project-specific-guidelines/EXECUTION_WORKFLOW.md) for the complete Stage 0–7 sequence.
-> **Sequence:** Functional Landscape → Actors → PRD → Epics → User Stories → Code
+> **Sequence:** Functional Landscape → Actors → PRD → Architecture → API Spec → **UI Wireframes** → Epics → User Stories → Code
 
 | Document | Layer | Purpose | Link |
 |---|---|---|---|
@@ -89,6 +91,8 @@ Before writing any code, read in this order:
 | Workflow — n8n / LangGraph / Celery | Layer responsibilities, n8n webhook design, LangGraph state, Celery tasks | [rules/workflow-rules.md](ai-development-guidelines/rules/workflow-rules.md) |
 | Configuration Management | Pydantic Settings class, feature flags, env file structure, env-specific overrides | [rules/configuration-rules.md](ai-development-guidelines/rules/configuration-rules.md) |
 | Synthetic & Demo Data | Demo data rules, `.example.com` domains, seed script structure, test factories | [rules/synthetic-data-rules.md](ai-development-guidelines/rules/synthetic-data-rules.md) |
+| **UI Wireframe Rules (generic)** | HTML format, WF-NNN naming, component library, API annotation pattern, DoD | [best-practices_rule_set_code/docs/rules/ui-wireframe-rules.md](best-practices_rule_set_code/docs/rules/ui-wireframe-rules.md) |
+| **UI Wireframe Rules (Jewelry AI)** | 7-screen catalog, actor-screen matrix, API field bindings per screen | [rules/ui-wireframe-rules.md](project-specific-guidelines/rules/ui-wireframe-rules.md) |
 
 ### POC & Demo
 

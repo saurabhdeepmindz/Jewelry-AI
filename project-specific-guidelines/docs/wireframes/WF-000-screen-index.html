@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--
+  Screen:     Screen Index — All Wireframes
+  File:       WF-000-screen-index.html
+  Epic:       All
+  Stories:    All
+  Actor(s):   All
+  Updated:    2026-03-19
+  Notes:      Master index of all UI wireframes for the Jewelry AI platform.
+              Open this file in a browser to navigate to any screen.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Jewelry AI — Wireframe Index</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #212121; font-size: 14px; }
+
+  .top-bar { background: #212121; color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 16px; }
+  .top-bar h1 { font-size: 18px; font-weight: bold; }
+  .top-bar span { font-size: 12px; color: #9e9e9e; }
+
+  .container { max-width: 1000px; margin: 40px auto; padding: 0 24px; }
+  h2 { font-size: 22px; margin-bottom: 8px; }
+  .subtitle { color: #757575; margin-bottom: 32px; font-size: 13px; }
+
+  .screen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .screen-card { background: #fff; border: 1px solid #e0e0e0; padding: 20px; text-decoration: none; color: #212121; display: block; transition: border-color 0.2s; }
+  .screen-card:hover { border-color: #424242; }
+  .screen-id { font-size: 11px; color: #9e9e9e; margin-bottom: 4px; font-family: monospace; }
+  .screen-name { font-size: 16px; font-weight: bold; margin-bottom: 8px; }
+  .screen-meta { font-size: 12px; color: #757575; line-height: 1.6; }
+  .screen-meta strong { color: #424242; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-right: 4px; }
+  .badge-actor { background: #e0e0e0; color: #424242; }
+  .badge-status-done { background: #424242; color: #fff; }
+  .badge-status-wip  { background: #9e9e9e; color: #fff; }
+
+  .actors { margin-top: 8px; }
+  .status { margin-top: 8px; }
+
+  .legend { margin-top: 48px; padding-top: 24px; border-top: 1px solid #e0e0e0; }
+  .legend h3 { margin-bottom: 12px; font-size: 14px; }
+  .legend-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>💎 Jewelry AI</h1>
+  <span>— Lead Automation Platform · UI Wireframe Index</span>
+</div>
+
+<div class="container">
+  <h2>Wireframe Index</h2>
+  <p class="subtitle">All screens for the Jewelry AI platform. Click any card to open the wireframe. Last updated: 2026-03-19.</p>
+
+  <div class="screen-grid">
+
+    <a href="WF-001-login.html" class="screen-card">
+      <div class="screen-id">WF-001</div>
+      <div class="screen-name">Login</div>
+      <div class="screen-meta">
+        <strong>Epic:</strong> EPIC-11 &nbsp; <strong>Story:</strong> US-039<br>
+        <div class="actors">
+          <span class="badge badge-actor">All users</span>
+          <span class="badge badge-actor">Public</span>
+        </div>
+        <div class="status"><span class="badge badge-status-done">✓ Created</span></div>
+      </div>
+    </a>
+
+    <a href="WF-002-lead-pipeline-dashboard.html" class="screen-card">
+      <div class="screen-id">WF-002</div>
+      <div class="screen-name">Lead Pipeline Dashboard</div>
+      <div class="screen-meta">
+        <strong>Epic:</strong> EPIC-09 &nbsp; <strong>Story:</strong> US-032<br>
+        <div class="actors">
+          <span class="badge badge-actor">rep</span>
+          <span class="badge badge-actor">manager</span>
+          <span class="badge badge-actor">admin</span>
+        </div>
+        <div class="status"><span class="badge badge-status-done">✓ Created</span></div>
+      </div>
+    </a>
+
+    <a href="WF-003-lead-detail-view.html" class="screen-card">
+      <div class="screen-id">WF-003</div>
+      <div class="screen-name">Lead Detail View</div>
+      <div class="screen-meta">
+        <strong>Epic:</strong> EPIC-09 &nbsp; <strong>Story:</strong> US-033<br>
+        <div class="actors">
+          <span class="badge badge-actor">rep</span>
+          <span class="badge badge-actor">manager</span>
+          <span class="badge badge-actor">admin</span>
+        </div>
+        <div class="status"><span class="badge badge-status-done">✓ Created</span></div>
+      </div>
+    </a>
+
+    <a href="WF-004-outreach-review-queue.html" class="screen-card">
+      <div class="screen-id">WF-004</div>
+      <div class="screen-name">Outreach Review Queue</div>
+      <div class="screen-meta">
+        <strong>Epic:</strong> EPIC-09 &nbsp; <strong>Story:</strong> US-034<br>
+        <div class="actors">
+          <span class="badge badge-actor">manager</span>
+          <span class="badge badge-actor">admin</span>
+        </div>
+        <div class="status"><span class="badge badge-status-done">✓ Created</span></div>
+      </div>
+    </a>
+
+    <a href="WF-005-analytics-funnel.html" class="screen-card">
+      <div class="screen-id">WF-005</div>
+      <div class="screen-name">Analytics Funnel</div>
+      <div class="screen-meta">
+        <strong>Epic:</strong> EPIC-09 &nbsp; <strong>Story:</strong> US-035<br>
+        <div class="actors">
+          <span class="badge badge-actor">rep</span>
+          <span class="badge badge-actor">manager</span>
+          <span class="badge badge-actor">admin</span>
+        </div>
+        <div class="status"><span class="badge badge-status-done">✓ Created</span></div>
+      </div>
+    </a>
+
+    <a href="WF-006-admin-users.html" class="screen-card">
+      <div class="screen-id">WF-006</div>
+      <div class="screen-name">Admin — User Management</div>
+      <div class="screen-meta">
+        <strong>Epic:</strong> EPIC-11 &nbsp; <strong>Story:</strong> US-041<br>
+        <div class="actors">
+          <span class="badge badge-actor">admin</span>
+        </div>
+        <div class="status"><span class="badge badge-status-done">✓ Created</span></div>
+      </div>
+    </a>
+
+    <a href="WF-007-csv-upload.html" class="screen-card">
+      <div class="screen-id">WF-007</div>
+      <div class="screen-name">CSV Upload</div>
+      <div class="screen-meta">
+        <strong>Epic:</strong> EPIC-02 &nbsp; <strong>Story:</strong> US-006<br>
+        <div class="actors">
+          <span class="badge badge-actor">rep</span>
+          <span class="badge badge-actor">manager</span>
+          <span class="badge badge-actor">admin</span>
+        </div>
+        <div class="status"><span class="badge badge-status-done">✓ Created</span></div>
+      </div>
+    </a>
+
+  </div><!-- /screen-grid -->
+
+  <div class="legend">
+    <h3>Legend</h3>
+    <div class="legend-row">
+      <div class="legend-item"><span class="badge badge-status-done">✓ Created</span> Wireframe complete</div>
+      <div class="legend-item"><span class="badge badge-status-wip">WIP</span> In progress</div>
+      <div class="legend-item"><span class="badge badge-actor">role</span> Actor who can access screen</div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<!--
+  Screen:     Analytics Funnel
+  File:       WF-005-analytics-funnel.html
+  Epic:       EPIC-09
+  Stories:    US-035
+  Actor(s):   rep (own data only), manager (all), admin (all)
+  API calls:  GET /api/v1/analytics/funnel?from=&to=&assigned_to=
+  Updated:    2026-03-19
+  Notes:      Funnel chart shows lead counts at each pipeline stage.
+              Rep sees only their assigned leads. Manager/admin see global.
+              Data is real-time (no stale cache per US-035 AC3).
+              Implementation: src/ui/pages/analytics.py
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>[WF-005] Analytics Funnel — Jewelry AI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #212121; font-size: 14px; }
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar { width: 220px; background: #212121; color: #fff; flex-shrink: 0; }
+  .sidebar-brand { padding: 20px 16px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #424242; }
+  .sidebar-brand span { font-size: 12px; color: #9e9e9e; display: block; }
+  .sidebar-user { padding: 12px 16px; border-bottom: 1px solid #424242; font-size: 12px; }
+  .sidebar-user .role { display: inline-block; background: #424242; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-top: 4px; }
+  .sidebar-nav a { display: block; padding: 10px 16px; color: #bdbdbd; text-decoration: none; font-size: 13px; }
+  .sidebar-nav a.active { background: #424242; color: #fff; }
+  .sidebar-section { padding: 8px 16px; font-size: 10px; text-transform: uppercase; color: #757575; letter-spacing: 1px; margin-top: 8px; }
+
+  .main { flex: 1; overflow: auto; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .topbar h1 { font-size: 18px; }
+  .breadcrumb { font-size: 12px; color: #757575; }
+  .breadcrumb a { color: #424242; }
+
+  .content { padding: 24px; }
+
+  .role-banner { background: #e0e0e0; border-left: 4px solid #424242; padding: 10px 16px; font-size: 12px; margin-bottom: 20px; }
+
+  /* Filters */
+  .filters { background: #fff; border: 1px solid #e0e0e0; padding: 16px; margin-bottom: 20px; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+  .filter-group { flex: 1; min-width: 150px; }
+  .filter-group label { display: block; font-size: 11px; color: #757575; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .filter-group input, .filter-group select { width: 100%; padding: 8px; border: 1px solid #bdbdbd; font-size: 13px; }
+  .btn-primary { background: #212121; color: #fff; border: none; padding: 9px 18px; cursor: pointer; font-size: 13px; }
+  .btn-secondary { background: #fff; color: #424242; border: 1px solid #424242; padding: 8px 16px; cursor: pointer; font-size: 13px; }
+
+  /* KPI summary */
+  .kpi-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; }
+  .kpi-card { background: #fff; border: 1px solid #e0e0e0; padding: 12px; text-align: center; }
+  .kpi-value { font-size: 22px; font-weight: bold; }
+  .kpi-label { font-size: 10px; color: #757575; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .kpi-pct { font-size: 11px; color: #9e9e9e; margin-top: 2px; }
+
+  /* Charts */
+  .chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .panel { background: #fff; border: 1px solid #e0e0e0; }
+  .panel-header { padding: 12px 16px; border-bottom: 1px solid #e0e0e0; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
+  .panel-body { padding: 16px; }
+
+  /* Funnel chart */
+  .funnel { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px; }
+  .funnel-stage { display: flex; align-items: center; gap: 12px; width: 100%; }
+  .funnel-bar-wrap { flex: 1; }
+  .funnel-bar { height: 36px; background: #424242; display: flex; align-items: center; padding: 0 12px; transition: width 0.3s; position: relative; }
+  .funnel-label { font-size: 12px; color: #fff; font-weight: bold; }
+  .funnel-count { font-size: 12px; color: #fff; margin-left: auto; }
+  .funnel-name { width: 90px; font-size: 12px; color: #424242; text-align: right; }
+  .funnel-pct { width: 50px; font-size: 11px; color: #9e9e9e; text-align: right; }
+
+  /* Drop indicator between stages */
+  .funnel-drop { font-size: 11px; color: #9e9e9e; text-align: center; padding: 0 0 0 104px; }
+
+  /* Line chart placeholder */
+  .chart-placeholder { background: #f5f5f5; border: 2px dashed #bdbdbd; height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #9e9e9e; font-size: 13px; gap: 8px; }
+  .chart-placeholder .chart-type { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Source quality table */
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #e0e0e0; padding: 8px 12px; text-align: left; border-bottom: 2px solid #bdbdbd; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; font-size: 13px; }
+  tr:hover td { background: #f5f5f5; }
+
+  /* Progress bar (mini) */
+  .mini-bar-wrap { background: #e0e0e0; height: 8px; width: 100%; border-radius: 4px; overflow: hidden; }
+  .mini-bar { background: #424242; height: 8px; border-radius: 4px; }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 60px 24px; color: #757575; background: #fff; border: 1px solid #e0e0e0; }
+
+  /* Annotations */
+  .annotations { background: #fff; border: 1px solid #e0e0e0; padding: 20px; margin-top: 20px; }
+  .annotations h3 { font-size: 14px; margin-bottom: 12px; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; }
+  .annotations ul { padding-left: 20px; }
+  .annotations li { margin-bottom: 6px; font-size: 13px; line-height: 1.5; }
+  .annotations code { background: #e0e0e0; padding: 1px 5px; font-family: monospace; font-size: 12px; }
+
+  .footer-nav { background: #e0e0e0; padding: 12px 24px; font-size: 12px; }
+  .footer-nav a { color: #424242; margin-right: 16px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-brand">💎 Jewelry AI<span>Lead Automation</span></div>
+    <div class="sidebar-user">Priya Sharma<br><span class="role">manager</span></div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section">Main</div>
+      <a href="WF-002-lead-pipeline-dashboard.html">📋 Leads</a>
+      <a href="WF-007-csv-upload.html">📤 Upload CSV</a>
+      <div class="sidebar-section">Manager</div>
+      <a href="WF-004-outreach-review-queue.html">📬 Review Queue</a>
+      <a href="#" class="active">📊 Analytics</a>
+      <div class="sidebar-section">Admin</div>
+      <a href="WF-006-admin-users.html" style="color:#757575;">👤 Users</a>
+      <div style="padding:16px 16px 0;"><a href="WF-001-login.html" style="color:#9e9e9e; font-size:12px; text-decoration:none;">🚪 Logout</a></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h1>Analytics — Pipeline Funnel</h1>
+        <div class="breadcrumb"><a href="WF-002-lead-pipeline-dashboard.html">Home</a> / Analytics</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="role-banner">
+        <!-- [A9] Manager: global view. Rep: own data only. -->
+        📌 Manager view — showing pipeline across all representatives
+      </div>
+
+      <!-- FILTERS -->
+      <!-- [A1] All filters → GET /api/v1/analytics/funnel query params -->
+      <div class="filters">
+        <div class="filter-group">
+          <label>From Date</label>
+          <input type="date" value="2026-03-01">
+        </div>
+        <div class="filter-group">
+          <label>To Date</label>
+          <input type="date" value="2026-03-19">
+        </div>
+        <div class="filter-group">
+          <label>Source</label>
+          <select>
+            <option>All sources</option>
+            <option>gmt</option>
+            <option>trade_book</option>
+            <option>rapid_list</option>
+            <option>manual</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <!-- [A10] Manager/Admin only: filter by rep. Hidden for rep. -->
+          <label>Representative</label>
+          <select>
+            <option>All reps</option>
+            <option>John Smith</option>
+            <option>Anjali Patel</option>
+            <option>David Kim</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn-primary">Apply</button>
+          &nbsp;
+          <button class="btn-secondary">Reset</button>
+        </div>
+      </div>
+
+      <!-- KPI ROW -->
+      <!-- [A2] From GET /api/v1/analytics/funnel response: {stage: count} -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-value">847</div>
+          <div class="kpi-label">Ingested</div>
+          <div class="kpi-pct">100%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value">623</div>
+          <div class="kpi-label">Matched</div>
+          <div class="kpi-pct">73.6%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value">489</div>
+          <div class="kpi-label">Enriched</div>
+          <div class="kpi-pct">57.7%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value">412</div>
+          <div class="kpi-label">Scored</div>
+          <div class="kpi-pct">48.6%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value">289</div>
+          <div class="kpi-label">Eligible</div>
+          <div class="kpi-pct">34.1%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value">156</div>
+          <div class="kpi-label">Outreached</div>
+          <div class="kpi-pct">18.4%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value">34</div>
+          <div class="kpi-label">Replied</div>
+          <div class="kpi-pct">4.0%</div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW -->
+      <div class="chart-row">
+
+        <!-- FUNNEL CHART -->
+        <div class="panel">
+          <div class="panel-header">
+            Pipeline Funnel
+            <span style="font-size:12px; color:#9e9e9e; font-weight:normal;">Mar 1 – Mar 19, 2026 · All sources</span>
+          </div>
+          <div class="panel-body">
+            <!-- [A3] Funnel chart — Plotly horizontal funnel in implementation. Grayscale wireframe shows proportional bars. -->
+            <div style="font-size:11px; color:#9e9e9e; margin-bottom:12px; text-align:right;">← wider bar = more leads at this stage</div>
+            <div class="funnel">
+
+              <div class="funnel-stage">
+                <div class="funnel-name">Ingested</div>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" style="width:100%; background:#212121;">
+                    <span class="funnel-label">847</span>
+                    <span class="funnel-count">100%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="funnel-drop">▼ 224 dropped (26.4% not matched)</div>
+
+              <div class="funnel-stage">
+                <div class="funnel-name">Matched</div>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" style="width:73.6%; background:#424242;">
+                    <span class="funnel-label">623</span>
+                    <span class="funnel-count">73.6%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="funnel-drop">▼ 134 dropped (21.5% not enriched)</div>
+
+              <div class="funnel-stage">
+                <div class="funnel-name">Enriched</div>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" style="width:57.7%; background:#424242;">
+                    <span class="funnel-label">489</span>
+                    <span class="funnel-count">57.7%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="funnel-drop">▼ 77 dropped (15.7% not scored yet)</div>
+
+              <div class="funnel-stage">
+                <div class="funnel-name">Scored</div>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" style="width:48.6%; background:#757575;">
+                    <span class="funnel-label">412</span>
+                    <span class="funnel-count">48.6%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="funnel-drop">▼ 123 dropped (29.9% below score threshold / ineligible)</div>
+
+              <div class="funnel-stage">
+                <div class="funnel-name">Eligible</div>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" style="width:34.1%; background:#757575;">
+                    <span class="funnel-label">289</span>
+                    <span class="funnel-count">34.1%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="funnel-drop">▼ 133 not yet outreached (in queue / pending review)</div>
+
+              <div class="funnel-stage">
+                <div class="funnel-name">Outreached</div>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" style="width:18.4%; background:#9e9e9e;">
+                    <span class="funnel-label">156</span>
+                    <span class="funnel-count">18.4%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="funnel-drop">▼ 122 no reply yet</div>
+
+              <div class="funnel-stage">
+                <div class="funnel-name">Replied</div>
+                <div class="funnel-bar-wrap">
+                  <div class="funnel-bar" style="width:4.0%; background:#bdbdbd; min-width:60px;">
+                    <span class="funnel-label" style="color:#212121;">34</span>
+                    <span class="funnel-count" style="color:#424242;">4.0%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECONDARY CHART — Leads over time -->
+        <div class="panel">
+          <div class="panel-header">Leads Added Over Time</div>
+          <div class="panel-body">
+            <!-- [A4] Line chart: x=date, y=leads created per day. Plotly line chart in implementation. -->
+            <div class="chart-placeholder">
+              <div class="chart-type">Line Chart</div>
+              <div>Leads created per day</div>
+              <div style="font-size:11px;">x: Date range (Mar 1–19)</div>
+              <div style="font-size:11px;">y: New leads created</div>
+              <div style="font-size:10px; color:#bdbdbd; margin-top:8px;">Plotly line chart in implementation</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /chart-row -->
+
+      <!-- SOURCE QUALITY TABLE -->
+      <div class="panel" style="margin-bottom:20px;">
+        <div class="panel-header">Lead Source Quality Comparison</div>
+        <div class="panel-body" style="padding:0;">
+          <!-- [A5] From GET /api/v1/analytics/source-quality or computed from funnel data -->
+          <table>
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Total</th>
+                <th>Matched %</th>
+                <th>Match Rate Bar</th>
+                <th>Eligible %</th>
+                <th>Reply Rate %</th>
+                <th>Avg Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <!-- [A6] Source ← Lead.source enum -->
+                <td><strong>GMT</strong></td>
+                <td>312</td>
+                <td>81%</td>
+                <td><div class="mini-bar-wrap"><div class="mini-bar" style="width:81%;"></div></div></td>
+                <td>42%</td>
+                <td>6.2%</td>
+                <td>74</td>
+              </tr>
+              <tr>
+                <td><strong>Trade Book</strong></td>
+                <td>289</td>
+                <td>76%</td>
+                <td><div class="mini-bar-wrap"><div class="mini-bar" style="width:76%;"></div></div></td>
+                <td>38%</td>
+                <td>5.1%</td>
+                <td>68</td>
+              </tr>
+              <tr>
+                <td><strong>Rapid List</strong></td>
+                <td>178</td>
+                <td>61%</td>
+                <td><div class="mini-bar-wrap"><div class="mini-bar" style="width:61%;"></div></div></td>
+                <td>28%</td>
+                <td>3.4%</td>
+                <td>58</td>
+              </tr>
+              <tr>
+                <td><strong>Manual</strong></td>
+                <td>54</td>
+                <td>94%</td>
+                <td><div class="mini-bar-wrap"><div class="mini-bar" style="width:94%;"></div></div></td>
+                <td>67%</td>
+                <td>11.1%</td>
+                <td>82</td>
+              </tr>
+              <tr>
+                <td><strong>API</strong></td>
+                <td>14</td>
+                <td>79%</td>
+                <td><div class="mini-bar-wrap"><div class="mini-bar" style="width:79%;"></div></div></td>
+                <td>50%</td>
+                <td>7.1%</td>
+                <td>71</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div class="empty-state" style="display:none;">
+        <!-- [A7] Shown when API returns all zeros (no leads in date range) -->
+        <p style="font-size:16px; margin-bottom:8px;">No leads in pipeline yet</p>
+        <p>Upload a CSV file to start ingesting leads. <a href="WF-007-csv-upload.html" style="color:#424242;">Upload CSV →</a></p>
+      </div>
+
+      <!-- ANNOTATIONS -->
+      <div class="annotations">
+        <h3>Annotations — WF-005: Analytics Funnel</h3>
+        <ul>
+          <li><strong>[A1]</strong> Filters → <code>GET /api/v1/analytics/funnel?from=2026-03-01&to=2026-03-19&source=&rep_id=</code></li>
+          <li><strong>[A2]</strong> KPI row: <code>funnel_data.ingested</code>, <code>.matched</code>, <code>.enriched</code>, <code>.scored</code>, <code>.eligible</code>, <code>.outreached</code>, <code>.replied</code></li>
+          <li><strong>[A3]</strong> Funnel chart: Plotly <code>go.Funnel</code> in production. Grayscale horizontal bars in wireframe. Stage counts labelled on bars. Drop percentage shown between stages.</li>
+          <li><strong>[A4]</strong> Leads over time: Plotly <code>go.Scatter</code> (line chart). x-axis = date, y-axis = leads created. Aggregated by day.</li>
+          <li><strong>[A5]</strong> Source quality table: computed from lead data grouped by <code>Lead.source</code>. Columns: matched %, eligible %, reply rate %, avg score.</li>
+          <li><strong>[A6]</strong> Source values: <code>gmt</code>, <code>trade_book</code>, <code>rapid_list</code>, <code>manual</code>, <code>api</code> (from <code>LeadSource</code> enum)</li>
+          <li><strong>[A7]</strong> Empty state: when <code>funnel_data.ingested == 0</code> for selected date range — show empty state, hide charts and table</li>
+          <li><strong>[A8]</strong> Data freshness: no cache on analytics endpoints (US-035 AC3). Every page load fetches fresh data from DB.</li>
+          <li><strong>[A9]</strong> Role filtering: rep → <code>?rep_id={current_user_id}</code> added server-side. Manager/admin → no rep_id filter unless explicitly selected.</li>
+          <li><strong>[A10]</strong> Representative filter dropdown: only visible to manager/admin. Hidden for rep (rep always sees own data only).</li>
+        </ul>
+      </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="footer-nav">
+  <strong>Navigation:</strong>
+  <a href="WF-000-screen-index.html">← Index</a>
+  <a href="WF-004-outreach-review-queue.html">← Review Queue</a>
+  <a href="WF-006-admin-users.html">Admin Users →</a>
+</div>
+
+</body>
+</html>

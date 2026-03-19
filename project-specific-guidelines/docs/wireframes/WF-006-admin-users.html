@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<!--
+  Screen:     Admin — User & API Key Management
+  File:       WF-006-admin-users.html
+  Epic:       EPIC-11
+  Stories:    US-041
+  Actor(s):   admin ONLY — manager/rep see 403
+  API calls:  GET  /api/v1/admin/users
+              POST /api/v1/admin/users  {username, email, password, role}
+              PATCH /api/v1/admin/users/{id}  {is_active: false}
+  Updated:    2026-03-19
+  Notes:      Two-tab layout: Users | API Keys.
+              API Key values are NEVER displayed after creation.
+              Deactivate is soft-delete — user cannot login but record preserved.
+              Implementation: src/ui/pages/admin.py
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>[WF-006] Admin — User Management — Jewelry AI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #212121; font-size: 14px; }
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar { width: 220px; background: #212121; color: #fff; flex-shrink: 0; }
+  .sidebar-brand { padding: 20px 16px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #424242; }
+  .sidebar-brand span { font-size: 12px; color: #9e9e9e; display: block; }
+  .sidebar-user { padding: 12px 16px; border-bottom: 1px solid #424242; font-size: 12px; }
+  .sidebar-user .role { display: inline-block; background: #424242; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-top: 4px; }
+  .sidebar-nav a { display: block; padding: 10px 16px; color: #bdbdbd; text-decoration: none; font-size: 13px; }
+  .sidebar-nav a.active { background: #424242; color: #fff; }
+  .sidebar-section { padding: 8px 16px; font-size: 10px; text-transform: uppercase; color: #757575; letter-spacing: 1px; margin-top: 8px; }
+
+  .main { flex: 1; overflow: auto; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .topbar h1 { font-size: 18px; }
+  .breadcrumb { font-size: 12px; color: #757575; }
+  .breadcrumb a { color: #424242; }
+
+  .content { padding: 24px; }
+
+  .role-banner { background: #e0e0e0; border-left: 4px solid #212121; padding: 10px 16px; font-size: 12px; margin-bottom: 20px; }
+
+  /* Tabs */
+  .tabs { display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px; }
+  .tab { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #757575; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: #212121; font-weight: bold; border-bottom-color: #212121; }
+
+  /* Toast */
+  .toast-success { background: #e0e0e0; border-left: 4px solid #212121; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; display: flex; justify-content: space-between; }
+
+  /* Panel */
+  .panel { background: #fff; border: 1px solid #e0e0e0; }
+  .panel-header { padding: 14px 16px; border-bottom: 1px solid #e0e0e0; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+
+  /* Buttons */
+  .btn-primary { background: #212121; color: #fff; border: none; padding: 9px 18px; cursor: pointer; font-size: 13px; }
+  .btn-secondary { background: #fff; color: #424242; border: 1px solid #424242; padding: 8px 16px; cursor: pointer; font-size: 13px; }
+  .btn-danger { background: #9e9e9e; color: #fff; border: none; padding: 6px 12px; cursor: pointer; font-size: 12px; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #e0e0e0; padding: 10px 12px; text-align: left; border-bottom: 2px solid #bdbdbd; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; font-size: 13px; vertical-align: middle; }
+  tr:hover td { background: #f5f5f5; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+  .badge-admin   { background: #212121; color: #fff; }
+  .badge-manager { background: #424242; color: #fff; }
+  .badge-rep     { background: #9e9e9e; color: #fff; }
+  .badge-active  { background: #e0e0e0; color: #424242; }
+  .badge-inactive{ background: #f5f5f5; color: #bdbdbd; border: 1px solid #e0e0e0; }
+
+  /* Create user form (inline) */
+  .create-form { background: #f5f5f5; border: 1px solid #e0e0e0; padding: 20px; margin-bottom: 16px; }
+  .create-form h3 { font-size: 14px; margin-bottom: 16px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { margin-bottom: 0; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { display: block; font-size: 11px; color: #757575; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  input, select { width: 100%; padding: 8px 10px; border: 1px solid #bdbdbd; font-size: 13px; background: #fff; }
+  input.error-field { border-color: #212121; }
+  .field-error { font-size: 12px; color: #212121; margin-top: 3px; }
+  .form-actions { margin-top: 16px; display: flex; gap: 8px; }
+
+  /* API keys section */
+  .api-key-item { border: 1px solid #e0e0e0; padding: 14px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+  .api-key-service { font-weight: bold; font-size: 14px; }
+  .api-key-meta { font-size: 12px; color: #757575; margin-top: 3px; }
+  .api-key-value { font-family: monospace; font-size: 12px; color: #9e9e9e; background: #f5f5f5; padding: 4px 8px; letter-spacing: 1px; }
+
+  /* Confirmation dialog (inline) */
+  .confirm-dialog { background: #fff; border: 2px solid #212121; padding: 16px; margin-top: 8px; display: none; }
+  .confirm-dialog.visible { display: block; }
+  .confirm-dialog p { font-size: 13px; margin-bottom: 12px; }
+  .confirm-actions { display: flex; gap: 8px; }
+
+  /* Annotations */
+  .annotations { background: #fff; border: 1px solid #e0e0e0; padding: 20px; margin-top: 20px; }
+  .annotations h3 { font-size: 14px; margin-bottom: 12px; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; }
+  .annotations ul { padding-left: 20px; }
+  .annotations li { margin-bottom: 6px; font-size: 13px; line-height: 1.5; }
+  .annotations code { background: #e0e0e0; padding: 1px 5px; font-family: monospace; font-size: 12px; }
+
+  .footer-nav { background: #e0e0e0; padding: 12px 24px; font-size: 12px; }
+  .footer-nav a { color: #424242; margin-right: 16px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-brand">💎 Jewelry AI<span>Lead Automation</span></div>
+    <div class="sidebar-user">Admin User<br><span class="role">admin</span></div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section">Main</div>
+      <a href="WF-002-lead-pipeline-dashboard.html">📋 Leads</a>
+      <a href="WF-007-csv-upload.html">📤 Upload CSV</a>
+      <div class="sidebar-section">Manager</div>
+      <a href="WF-004-outreach-review-queue.html">📬 Review Queue</a>
+      <a href="WF-005-analytics-funnel.html">📊 Analytics</a>
+      <div class="sidebar-section">Admin</div>
+      <a href="#" class="active">👤 Users</a>
+      <div style="padding:16px 16px 0;"><a href="WF-001-login.html" style="color:#9e9e9e; font-size:12px; text-decoration:none;">🚪 Logout</a></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h1>Admin Panel</h1>
+        <div class="breadcrumb"><a href="WF-002-lead-pipeline-dashboard.html">Home</a> / Admin</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="role-banner">
+        🔒 Admin only — User and API Key management. Not accessible to managers or reps.
+      </div>
+
+      <!-- SUCCESS TOAST -->
+      <div class="toast-success">
+        ✓ User <strong>anjali.patel</strong> created successfully with role <strong>rep</strong>.
+        <span style="cursor:pointer; color:#757575;">✕</span>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <!-- [A1] Tab 1: Users management -->
+        <div class="tab active">👤 Users</div>
+        <!-- [A2] Tab 2: API Keys management -->
+        <div class="tab">🔑 API Keys</div>
+      </div>
+
+      <!-- ========== TAB 1: USERS ========== -->
+      <div id="tab-users">
+
+        <!-- CREATE USER FORM -->
+        <div class="create-form">
+          <h3>Create New User</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Username <span style="color:#212121;">*</span></label>
+              <!-- [A3] POST /api/v1/admin/users body.username -->
+              <input type="text" placeholder="john.smith" value="anjali.patel">
+            </div>
+            <div class="form-group">
+              <label>Email <span style="color:#212121;">*</span></label>
+              <!-- [A4] POST /api/v1/admin/users body.email -->
+              <input type="email" placeholder="john@shivamjewels.com" value="anjali@shivamjewels.com">
+            </div>
+            <div class="form-group">
+              <label>Temporary Password <span style="color:#212121;">*</span></label>
+              <!-- [A5] POST /api/v1/admin/users body.password — hashed server-side, never stored plain -->
+              <input type="password" placeholder="Min 12 characters" value="••••••••••••">
+            </div>
+            <div class="form-group">
+              <label>Role <span style="color:#212121;">*</span></label>
+              <!-- [A6] POST /api/v1/admin/users body.role: admin | manager | rep -->
+              <select>
+                <option>Select role…</option>
+                <option>admin</option>
+                <option>manager</option>
+                <option selected>rep</option>
+              </select>
+            </div>
+          </div>
+          <!-- Field validation error example -->
+          <div class="field-error" style="margin-top:8px; display:none;">Username already exists. Choose a different username.</div>
+          <div class="form-actions">
+            <button class="btn-primary">Create User</button>
+            <button class="btn-secondary">Cancel</button>
+          </div>
+        </div>
+
+        <!-- USERS TABLE -->
+        <div class="panel">
+          <div class="panel-header">
+            All Users
+            <span style="font-size:12px; color:#9e9e9e; font-weight:normal;">4 users total</span>
+          </div>
+          <!-- [A7] From GET /api/v1/admin/users → array of User objects -->
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Last Login</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <!-- [A8] User.username, User.email, User.role, User.is_active, User.created_at -->
+                <td><strong>admin</strong></td>
+                <td>admin@shivamjewels.com</td>
+                <td><span class="badge badge-admin">admin</span></td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td>2026-03-01</td>
+                <td>2 hours ago</td>
+                <td>
+                  <!-- [A9] Cannot deactivate self (admin cannot deactivate own account) -->
+                  <button class="btn-danger btn-sm" disabled style="opacity:0.4;" title="Cannot deactivate yourself">Deactivate</button>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>priya.sharma</strong></td>
+                <td>priya@shivamjewels.com</td>
+                <td><span class="badge badge-manager">manager</span></td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td>2026-03-02</td>
+                <td>1 day ago</td>
+                <td>
+                  <!-- [A10] PATCH /api/v1/admin/users/{id} {is_active: false} → soft deactivation -->
+                  <button class="btn-danger btn-sm">Deactivate</button>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>john.smith</strong></td>
+                <td>john@shivamjewels.com</td>
+                <td><span class="badge badge-rep">rep</span></td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td>2026-03-05</td>
+                <td>4 hours ago</td>
+                <td>
+                  <button class="btn-danger btn-sm">Deactivate</button>
+                </td>
+              </tr>
+              <tr style="color:#9e9e9e;">
+                <td><strong>david.kim</strong></td>
+                <td>david@shivamjewels.com</td>
+                <td><span class="badge badge-rep">rep</span></td>
+                <!-- [A11] Inactive user — cannot login, shown greyed -->
+                <td><span class="badge badge-inactive">Inactive</span></td>
+                <td>2026-03-10</td>
+                <td>Never</td>
+                <td>
+                  <!-- [A12] Reactivate inactive user -->
+                  <button class="btn-secondary btn-sm">Reactivate</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Deactivation confirm dialog -->
+        <div class="confirm-dialog visible" style="margin-top:8px;">
+          <!-- [A13] Shown when Deactivate button clicked — requires explicit confirmation -->
+          <p>Are you sure you want to deactivate <strong>priya.sharma</strong>? They will not be able to log in. Existing data is preserved.</p>
+          <div class="confirm-actions">
+            <button class="btn-primary" style="background:#212121;">Confirm Deactivate</button>
+            <button class="btn-secondary">Cancel</button>
+          </div>
+        </div>
+
+      </div><!-- /tab-users -->
+
+      <!-- ========== TAB 2: API KEYS (hidden by default) ========== -->
+      <div id="tab-apikeys" style="display:none;">
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-header">
+            External API Keys
+            <button class="btn-secondary btn-sm">+ Add API Key</button>
+          </div>
+          <div style="padding:16px;">
+
+            <!-- [A14] API key service name + active status + last rotated. Key value NEVER shown. -->
+            <div class="api-key-item">
+              <div>
+                <div class="api-key-service">OpenAI</div>
+                <div class="api-key-meta">Added 2026-03-01 · Last rotated: Never · <span class="badge badge-active">Active</span></div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <!-- [A15] Masked key — partial reveal of first/last 4 chars only -->
+                <div class="api-key-value">sk-••••••••••••••••••••••••••••••Xk9f</div>
+                <button class="btn-danger btn-sm">Revoke</button>
+              </div>
+            </div>
+
+            <div class="api-key-item">
+              <div>
+                <div class="api-key-service">Apollo.io</div>
+                <div class="api-key-meta">Added 2026-03-01 · Last rotated: Never · <span class="badge badge-active">Active</span></div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="api-key-value">apo-••••••••••••••••••••••••2mVt</div>
+                <button class="btn-danger btn-sm">Revoke</button>
+              </div>
+            </div>
+
+            <div class="api-key-item">
+              <div>
+                <div class="api-key-service">SendGrid</div>
+                <div class="api-key-meta">Added 2026-03-01 · Last rotated: Never · <span class="badge badge-active">Active</span></div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="api-key-value">SG.••••••••••••••••••••••••••••••••••••••••3nRz</div>
+                <button class="btn-danger btn-sm">Revoke</button>
+              </div>
+            </div>
+
+            <div class="api-key-item" style="background:#f5f5f5; border-style:dashed;">
+              <div>
+                <div class="api-key-service" style="color:#9e9e9e;">Hunter.io</div>
+                <!-- [A16] Revoked key — shown greyed with timestamp -->
+                <div class="api-key-meta">Revoked 2026-03-15 · <span class="badge badge-inactive">Revoked</span></div>
+              </div>
+              <div style="color:#bdbdbd; font-size:12px;">Key no longer active</div>
+            </div>
+
+            <div style="margin-top:12px; padding:12px; background:#f5f5f5; border:1px solid #e0e0e0; font-size:12px; color:#757575;">
+              <!-- [A17] Security note — always visible -->
+              🔒 <strong>Security:</strong> API key values are encrypted at rest and never displayed in full after creation. The partial preview (first/last 4 characters) is for identification only. Rotate keys regularly by revoking and adding a new one.
+            </div>
+          </div>
+        </div>
+      </div><!-- /tab-apikeys -->
+
+      <!-- ANNOTATIONS -->
+      <div class="annotations">
+        <h3>Annotations — WF-006: Admin Panel</h3>
+        <ul>
+          <li><strong>[A1]</strong> Tab 1 (Users): default tab on page load. Manages platform user accounts.</li>
+          <li><strong>[A2]</strong> Tab 2 (API Keys): manages external service credentials. Stored encrypted in DB or env-managed.</li>
+          <li><strong>[A3]</strong> <code>username</code> → <code>POST /api/v1/admin/users</code> body — must be unique, lowercase letters/dots/numbers only</li>
+          <li><strong>[A4]</strong> <code>email</code> → validated as valid email address before submission</li>
+          <li><strong>[A5]</strong> <code>password</code> → temporary password. User must change on first login. Min 12 chars. Never logged.</li>
+          <li><strong>[A6]</strong> <code>role</code> → one of: <code>admin</code>, <code>manager</code>, <code>rep</code>. Maps to <code>User.role</code> enum.</li>
+          <li><strong>[A7]</strong> Users table: <code>GET /api/v1/admin/users</code> → <code>User[]</code>. Fields: <code>username</code>, <code>email</code>, <code>role</code>, <code>is_active</code>, <code>created_at</code>, <code>last_login_at</code>.</li>
+          <li><strong>[A8]</strong> Role badge colours: admin=black, manager=dark-grey, rep=light-grey</li>
+          <li><strong>[A9]</strong> Admin cannot deactivate own account. Deactivate button disabled when row = logged-in user.</li>
+          <li><strong>[A10]</strong> Deactivate: <code>PATCH /api/v1/admin/users/{id}</code> with <code>{"is_active": false}</code>. Soft delete — user record preserved.</li>
+          <li><strong>[A11]</strong> Inactive users shown greyed out. Cannot login. Still appear in table for audit trail.</li>
+          <li><strong>[A12]</strong> Reactivate: <code>PATCH /api/v1/admin/users/{id}</code> with <code>{"is_active": true}</code></li>
+          <li><strong>[A13]</strong> Deactivation confirmation dialog: shown inline below the table when Deactivate is clicked. Must explicitly confirm before API call.</li>
+          <li><strong>[A14]</strong> API keys: <code>GET /api/v1/admin/api-keys</code> → service name, is_active, last_rotated_at. Never returns key value.</li>
+          <li><strong>[A15]</strong> Key preview: show first 4 + "••••" + last 4 chars only. For identification. Never full plaintext.</li>
+          <li><strong>[A16]</strong> Revoked keys: shown greyed with revocation timestamp. For audit trail. Cannot reactivate — must add new key.</li>
+          <li><strong>[A17]</strong> Security reminder always shown on API Keys tab. Encourages key rotation.</li>
+        </ul>
+      </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="footer-nav">
+  <strong>Navigation:</strong>
+  <a href="WF-000-screen-index.html">← Index</a>
+  <a href="WF-005-analytics-funnel.html">← Analytics</a>
+  <a href="WF-007-csv-upload.html">CSV Upload →</a>
+</div>
+
+</body>
+</html>

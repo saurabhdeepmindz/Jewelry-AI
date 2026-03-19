@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<!--
+  Screen:     Lead Detail View
+  File:       WF-003-lead-detail-view.html
+  Epic:       EPIC-09
+  Stories:    US-033
+  Actor(s):   rep (own leads only), manager (all), admin (all)
+  API calls:  GET /api/v1/leads/{lead_id}
+              GET /api/v1/leads/{lead_id}/contacts
+              GET /api/v1/leads/{lead_id}/matches
+              GET /api/v1/leads/{lead_id}/activities
+  Updated:    2026-03-19
+  Notes:      Two-column layout: left = company info + contacts, right = matches + CRM timeline.
+              CRM timeline shows newest-first (US-033 AC1).
+              Implementation: src/ui/pages/lead_detail.py
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>[WF-003] Lead Detail View — Jewelry AI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #212121; font-size: 14px; }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar — same as WF-002 */
+  .sidebar { width: 220px; background: #212121; color: #fff; flex-shrink: 0; }
+  .sidebar-brand { padding: 20px 16px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #424242; }
+  .sidebar-brand span { font-size: 12px; color: #9e9e9e; display: block; }
+  .sidebar-user { padding: 12px 16px; border-bottom: 1px solid #424242; font-size: 12px; }
+  .sidebar-user .role { display: inline-block; background: #424242; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-top: 4px; }
+  .sidebar-nav a { display: block; padding: 10px 16px; color: #bdbdbd; text-decoration: none; font-size: 13px; }
+  .sidebar-nav a.active { background: #424242; color: #fff; }
+  .sidebar-section { padding: 8px 16px; font-size: 10px; text-transform: uppercase; color: #757575; letter-spacing: 1px; margin-top: 8px; }
+
+  .main { flex: 1; overflow: auto; }
+
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .topbar h1 { font-size: 18px; }
+  .breadcrumb { font-size: 12px; color: #757575; margin-top: 2px; }
+  .breadcrumb a { color: #424242; }
+
+  .content { padding: 24px; }
+
+  /* Lead header card */
+  .lead-header { background: #fff; border: 1px solid #e0e0e0; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .lead-title { font-size: 22px; font-weight: bold; margin-bottom: 6px; }
+  .lead-meta { font-size: 13px; color: #757575; line-height: 1.8; }
+  .lead-meta strong { color: #424242; }
+  .lead-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-primary { background: #212121; color: #fff; border: none; padding: 9px 18px; cursor: pointer; font-size: 13px; }
+  .btn-secondary { background: #fff; color: #424242; border: 1px solid #424242; padding: 8px 16px; cursor: pointer; font-size: 13px; }
+  .btn-disabled { background: #e0e0e0; color: #9e9e9e; border: none; padding: 9px 18px; font-size: 13px; cursor: not-allowed; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin-left: 8px; }
+  .badge-eligible  { background: #212121; color: #fff; }
+  .badge-enriched  { background: #757575; color: #fff; }
+  .badge-ingested  { background: #e0e0e0; color: #424242; }
+  .badge-matched   { background: #424242; color: #fff; }
+  .badge-ineligible{ background: #bdbdbd; color: #424242; }
+
+  /* Two-column layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .panel { background: #fff; border: 1px solid #e0e0e0; }
+  .panel-header { padding: 12px 16px; border-bottom: 1px solid #e0e0e0; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .panel-body { padding: 16px; }
+
+  /* Info rows */
+  .info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+  .info-label { color: #757575; }
+  .info-value { font-weight: 500; text-align: right; }
+
+  /* Contacts table */
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #e0e0e0; padding: 8px 10px; text-align: left; border-bottom: 2px solid #bdbdbd; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 8px 10px; border-bottom: 1px solid #e0e0e0; font-size: 12px; }
+
+  /* Inventory match items */
+  .match-item { border: 1px solid #e0e0e0; padding: 12px; margin-bottom: 8px; }
+  .match-sku { font-weight: bold; font-size: 13px; }
+  .match-meta { font-size: 12px; color: #757575; margin-top: 4px; line-height: 1.6; }
+
+  /* CRM Timeline */
+  .timeline { }
+  .timeline-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f5f5f5; }
+  .timeline-dot { width: 10px; height: 10px; background: #424242; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .timeline-dot-light { background: #bdbdbd; }
+  .timeline-content { flex: 1; }
+  .timeline-event { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #424242; }
+  .timeline-desc { font-size: 13px; color: #212121; margin-top: 2px; }
+  .timeline-meta { font-size: 11px; color: #9e9e9e; margin-top: 4px; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 24px; color: #9e9e9e; font-size: 13px; }
+
+  /* Score gauge */
+  .score-display { display: flex; align-items: center; gap: 12px; }
+  .score-circle { width: 60px; height: 60px; border-radius: 50%; background: #212121; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
+  .score-desc { font-size: 13px; color: #757575; }
+
+  /* Annotations */
+  .annotations { background: #fff; border: 1px solid #e0e0e0; padding: 20px; margin-top: 20px; }
+  .annotations h3 { font-size: 14px; margin-bottom: 12px; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; }
+  .annotations ul { padding-left: 20px; }
+  .annotations li { margin-bottom: 6px; font-size: 13px; line-height: 1.5; }
+  .annotations code { background: #e0e0e0; padding: 1px 5px; font-family: monospace; font-size: 12px; }
+
+  .footer-nav { background: #e0e0e0; padding: 12px 24px; font-size: 12px; }
+  .footer-nav a { color: #424242; margin-right: 16px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-brand">💎 Jewelry AI<span>Lead Automation</span></div>
+    <div class="sidebar-user">John Smith<br><span class="role">rep</span></div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section">Main</div>
+      <a href="WF-002-lead-pipeline-dashboard.html">📋 Leads</a>
+      <a href="WF-007-csv-upload.html">📤 Upload CSV</a>
+      <a href="#" class="active">🔍 Lead Detail</a>
+      <div class="sidebar-section">Manager</div>
+      <a href="WF-004-outreach-review-queue.html" style="color:#757575;">📬 Review Queue</a>
+      <a href="WF-005-analytics-funnel.html">📊 Analytics</a>
+      <div class="sidebar-section">Admin</div>
+      <a href="WF-006-admin-users.html" style="color:#757575;">👤 Users</a>
+      <div style="padding:16px 16px 0;"><a href="WF-001-login.html" style="color:#9e9e9e; font-size:12px; text-decoration:none;">🚪 Logout</a></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h1>Lead Detail</h1>
+        <!-- [A1] Breadcrumb: leads list → current lead name -->
+        <div class="breadcrumb"><a href="WF-002-lead-pipeline-dashboard.html">Leads</a> / Acme Jewelers Inc</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- LEAD HEADER -->
+      <div class="lead-header">
+        <div>
+          <!-- [A2] Lead.company_name -->
+          <div class="lead-title">
+            Acme Jewelers Inc
+            <span class="badge badge-eligible">eligible</span>
+            <!-- [A3] Lead.status badge -->
+          </div>
+          <div class="lead-meta">
+            <strong>Domain:</strong> acmejewelers.com &nbsp;|&nbsp;
+            <!-- [A4] Lead.domain -->
+            <strong>Country:</strong> United States &nbsp;|&nbsp;
+            <strong>Source:</strong> GMT &nbsp;|&nbsp;
+            <strong>Match:</strong> <span class="badge badge-matched" style="margin:0;">matched</span>
+            <!-- [A5] Lead.match_status -->
+          </div>
+          <div class="lead-meta" style="margin-top:6px;">
+            <strong>Created:</strong> 2026-03-18 &nbsp;|&nbsp;
+            <strong>Lead ID:</strong> <code style="font-size:11px; background:#f5f5f5; padding:1px 4px;">f47ac10b-58cc…</code>
+          </div>
+        </div>
+        <!-- ACTION BUTTONS -->
+        <div class="lead-actions">
+          <!-- [A6] Buttons enabled/disabled based on Lead.status and enrichment state -->
+          <button class="btn-secondary">🔬 Enrich Contacts</button>
+          <button class="btn-secondary">🔗 Run Match</button>
+          <button class="btn-primary">✉ Generate Outreach</button>
+          <!-- [A7] Generate Outreach disabled unless Lead.status == "eligible" and contacts exist -->
+        </div>
+      </div>
+
+      <!-- SCORE DISPLAY -->
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="panel-header">Lead Score</div>
+        <div class="panel-body">
+          <div class="score-display">
+            <div class="score-circle">87</div>
+            <!-- [A8] Lead.score (0–100). Show "N/A" circle if null -->
+            <div>
+              <div style="font-weight:bold; margin-bottom:4px;">High Priority — Score Tier: HIGH</div>
+              <div class="score-desc">Scored 2026-03-18 · XGBoost model v2.1 · Features: match quality (0.82), domain age (0.74), country tier (0.90)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TWO-COLUMN LAYOUT -->
+      <div class="two-col">
+
+        <!-- LEFT COLUMN -->
+        <div>
+          <!-- COMPANY INFO -->
+          <div class="panel" style="margin-bottom:16px;">
+            <div class="panel-header">Company Information</div>
+            <div class="panel-body">
+              <!-- [A2] All fields from GET /api/v1/leads/{lead_id} -->
+              <div class="info-row"><span class="info-label">Company Name</span><span class="info-value">Acme Jewelers Inc</span></div>
+              <div class="info-row"><span class="info-label">Domain</span><span class="info-value">acmejewelers.com</span></div>
+              <div class="info-row"><span class="info-label">Country</span><span class="info-value">United States</span></div>
+              <div class="info-row"><span class="info-label">Source</span><span class="info-value">GMT</span></div>
+              <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge badge-eligible">eligible</span></span></div>
+              <div class="info-row"><span class="info-label">Match Status</span><span class="info-value"><span class="badge badge-matched">matched</span></span></div>
+              <div class="info-row"><span class="info-label">Created At</span><span class="info-value">2026-03-18 09:14 UTC</span></div>
+              <div class="info-row"><span class="info-label">Updated At</span><span class="info-value">2026-03-18 14:22 UTC</span></div>
+            </div>
+          </div>
+
+          <!-- CONTACTS -->
+          <div class="panel">
+            <div class="panel-header">
+              Enriched Contacts
+              <button class="btn-secondary" style="font-size:12px; padding:4px 10px;">+ Enrich</button>
+            </div>
+            <div class="panel-body" style="padding:0;">
+              <!-- [A9] From GET /api/v1/leads/{lead_id}/contacts -->
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Title</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <!-- [A10] Contact.name, Contact.title, Contact.email, Contact.phone -->
+                    <td>Sarah Chen</td>
+                    <td>Head of Procurement</td>
+                    <td>sarah.chen@acmejewelers.com</td>
+                    <td>+1-555-0101</td>
+                  </tr>
+                  <tr>
+                    <td>Mark Torres</td>
+                    <td>Buyer</td>
+                    <td>m.torres@acmejewelers.com</td>
+                    <td>—</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Empty state for contacts -->
+              <div class="empty" style="display:none;">
+                <!-- [A11] Shown when contacts array is empty -->
+                No contacts enriched yet. Click "Enrich" to fetch contacts from Apollo.io.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+          <!-- MATCHED INVENTORY -->
+          <div class="panel" style="margin-bottom:16px;">
+            <div class="panel-header">Matched Inventory Items</div>
+            <div class="panel-body">
+              <!-- [A12] From GET /api/v1/leads/{lead_id}/matches -->
+              <div class="match-item">
+                <div class="match-sku">SKU: RBC-2.01-VS1-E-EX</div>
+                <!-- [A13] Inventory.sku -->
+                <div class="match-meta">
+                  <strong>Stone:</strong> Round Brilliant Cut &nbsp;|&nbsp;
+                  <strong>Carat:</strong> 2.01 &nbsp;|&nbsp;
+                  <strong>Clarity:</strong> VS1 &nbsp;|&nbsp;
+                  <strong>Colour:</strong> E &nbsp;|&nbsp;
+                  <strong>Cut:</strong> Excellent
+                  <!-- [A14] Carat: always 2 decimal places per GIA standard -->
+                </div>
+                <div class="match-meta"><strong>Price:</strong> $18,400 &nbsp;|&nbsp; <strong>Match Score:</strong> 0.94</div>
+              </div>
+              <div class="match-item">
+                <div class="match-sku">SKU: RBC-1.53-SI1-F-VG</div>
+                <div class="match-meta">
+                  <strong>Stone:</strong> Round Brilliant Cut &nbsp;|&nbsp;
+                  <strong>Carat:</strong> 1.53 &nbsp;|&nbsp;
+                  <strong>Clarity:</strong> SI1 &nbsp;|&nbsp;
+                  <strong>Colour:</strong> F &nbsp;|&nbsp;
+                  <strong>Cut:</strong> Very Good
+                </div>
+                <div class="match-meta"><strong>Price:</strong> $9,200 &nbsp;|&nbsp; <strong>Match Score:</strong> 0.81</div>
+              </div>
+
+              <!-- Empty state for matches -->
+              <div class="empty" style="display:none;">
+                <!-- [A15] Shown when no matches found -->
+                No inventory matches found. Run matching to check current stock.
+              </div>
+            </div>
+          </div>
+
+          <!-- CRM ACTIVITY TIMELINE -->
+          <div class="panel">
+            <div class="panel-header">CRM Activity Timeline</div>
+            <div class="panel-body" style="padding:12px 16px;">
+              <!-- [A16] From GET /api/v1/leads/{lead_id}/activities — newest first (US-033 AC1) -->
+
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-event">outreach_sent</div>
+                  <!-- [A17] CRMActivity.event_type -->
+                  <div class="timeline-desc">Email sent to sarah.chen@acmejewelers.com — Subject: "Diamond sourcing opportunity — RBC 2.01ct VS1"</div>
+                  <!-- [A18] CRMActivity.payload (JSON shown as readable summary) -->
+                  <div class="timeline-meta">2 hours ago · system · <code style="font-size:10px;">sendgrid_msg_id: SG.abc123</code></div>
+                  <!-- [A19] CRMActivity.created_at as relative time (e.g., "2 hours ago") -->
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-event">outreach_approved</div>
+                  <div class="timeline-desc">Email draft approved by manager@shivamjewels.com</div>
+                  <div class="timeline-meta">3 hours ago · manager</div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-event">outreach_generated</div>
+                  <div class="timeline-desc">AI-generated email draft created. Model: gpt-4o. Awaiting review.</div>
+                  <div class="timeline-meta">4 hours ago · system</div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-event">contact_enriched</div>
+                  <div class="timeline-desc">2 contacts enriched via Apollo.io. Emails verified via Hunter.io.</div>
+                  <div class="timeline-meta">5 hours ago · system</div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot timeline-dot-light"></div>
+                <div class="timeline-content">
+                  <div class="timeline-event">inventory_matched</div>
+                  <div class="timeline-desc">2 inventory items matched. Lead marked Eligible.</div>
+                  <div class="timeline-meta">6 hours ago · system</div>
+                </div>
+              </div>
+
+              <div class="timeline-item">
+                <div class="timeline-dot timeline-dot-light"></div>
+                <div class="timeline-content">
+                  <div class="timeline-event">lead_ingested</div>
+                  <div class="timeline-desc">Lead created from CSV upload (batch: job_f47ac10b). Source: GMT.</div>
+                  <div class="timeline-meta">2026-03-18 09:14 UTC · system</div>
+                </div>
+              </div>
+
+              <!-- Empty state for timeline -->
+              <div class="empty" style="display:none;">
+                <!-- [A20] Shown when no activities exist -->
+                No activity recorded yet.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /two-col -->
+
+      <!-- ANNOTATIONS -->
+      <div class="annotations">
+        <h3>Annotations — WF-003: Lead Detail View</h3>
+        <ul>
+          <li><strong>[A1]</strong> Breadcrumb: clicking "Leads" → <code>WF-002</code> (Lead Pipeline Dashboard)</li>
+          <li><strong>[A2]</strong> Lead header data: <code>GET /api/v1/leads/{lead_id}</code> → <code>Lead</code> object</li>
+          <li><strong>[A3]</strong> Status badge colours: eligible=dark, enriched=medium, ingested=light, ineligible=muted</li>
+          <li><strong>[A4]</strong> Domain: show "—" if <code>Lead.domain is null</code></li>
+          <li><strong>[A5]</strong> Match status badge: pending=light, matched=dark, no_match=muted</li>
+          <li><strong>[A6]</strong> Action buttons enabled/disabled logic: Enrich → enabled if no contacts; Match → enabled if match_status=pending; Generate Outreach → enabled only if status=eligible AND contacts exist</li>
+          <li><strong>[A7]</strong> Generate Outreach triggers: <code>POST /api/v1/outreach/generate</code> → redirects to review queue after creation</li>
+          <li><strong>[A8]</strong> Score: <code>Lead.score</code> (int 0–100). Show "N/A" if null (not yet scored by ML model)</li>
+          <li><strong>[A9]</strong> Contacts: <code>GET /api/v1/leads/{lead_id}/contacts</code> → array of <code>Contact</code> objects</li>
+          <li><strong>[A10]</strong> Contact fields: <code>Contact.name</code>, <code>Contact.title</code>, <code>Contact.email</code>, <code>Contact.phone</code>. Show "—" for null phone.</li>
+          <li><strong>[A11]</strong> Contacts empty state: when contacts array is empty or null</li>
+          <li><strong>[A12]</strong> Matched inventory: <code>GET /api/v1/leads/{lead_id}/matches</code> → sorted by match_score DESC</li>
+          <li><strong>[A13]</strong> Inventory fields: <code>Inventory.sku</code>, stone type, carat, clarity, colour, cut, price</li>
+          <li><strong>[A14]</strong> Carat weight: always display with 2 decimal places (GIA standard, business rule)</li>
+          <li><strong>[A15]</strong> No matches: lead status=ineligible. Show message and disable Generate Outreach.</li>
+          <li><strong>[A16]</strong> CRM Timeline: <code>GET /api/v1/leads/{lead_id}/activities?order=desc</code> (newest first — US-033 AC1)</li>
+          <li><strong>[A17]</strong> Event type: <code>CRMActivity.event_type</code> — shown as ALL_CAPS label</li>
+          <li><strong>[A18]</strong> Payload: <code>CRMActivity.payload</code> (JSON) — render as human-readable summary, not raw JSON</li>
+          <li><strong>[A19]</strong> Timestamp: show as relative time ("2 hours ago") for recent; absolute UTC for older than 7 days</li>
+          <li><strong>[A20]</strong> Timeline empty: only occurs for a brand-new lead before any processing</li>
+        </ul>
+      </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="footer-nav">
+  <strong>Navigation:</strong>
+  <a href="WF-000-screen-index.html">← Index</a>
+  <a href="WF-002-lead-pipeline-dashboard.html">← Lead Dashboard</a>
+  <a href="WF-004-outreach-review-queue.html">Review Queue →</a>
+</div>
+
+</body>
+</html>

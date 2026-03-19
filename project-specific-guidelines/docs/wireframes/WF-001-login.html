@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<!--
+  Screen:     Login
+  File:       WF-001-login.html
+  Epic:       EPIC-11
+  Stories:    US-039 (JWT Login and Token Refresh)
+  Actor(s):   All (public page)
+  API calls:  POST /api/v1/auth/login → {access_token, refresh_token, role}
+  Updated:    2026-03-19
+  Notes:      Public page. On success → redirect to Lead Pipeline Dashboard (WF-002).
+              No indication of whether username exists (security rule US-039 AC3).
+              Implementation: src/ui/pages/login.py
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>[WF-001] Login — Jewelry AI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #212121; font-size: 14px; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Nav */
+  .nav { background: #212121; color: #fff; padding: 10px 24px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+  .nav-brand { font-size: 16px; font-weight: bold; }
+  .nav-back { color: #9e9e9e; text-decoration: none; font-size: 12px; }
+  .nav-back:hover { color: #fff; }
+
+  /* Main */
+  .page-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+  .login-card { background: #fff; border: 1px solid #e0e0e0; padding: 40px; width: 100%; max-width: 400px; }
+  .login-logo { font-size: 28px; text-align: center; margin-bottom: 8px; }
+  .login-title { font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+  .login-subtitle { font-size: 13px; color: #757575; text-align: center; margin-bottom: 32px; }
+
+  .form-group { margin-bottom: 20px; }
+  label { display: block; font-size: 12px; color: #757575; margin-bottom: 6px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+  input { width: 100%; padding: 10px 12px; border: 1px solid #bdbdbd; background: #fff; font-size: 14px; }
+  input:focus { outline: 2px solid #424242; border-color: #424242; }
+  input.error-field { border-color: #212121; }
+
+  .field-error { font-size: 12px; color: #212121; margin-top: 4px; display: none; }
+  .field-error.visible { display: block; }
+
+  .btn-primary { width: 100%; background: #212121; color: #fff; border: none; padding: 12px; font-size: 15px; cursor: pointer; margin-top: 8px; }
+  .btn-primary:hover { background: #424242; }
+
+  .toast-error { background: #f5f5f5; border-left: 4px solid #212121; padding: 12px 16px; font-size: 13px; margin-bottom: 20px; display: none; }
+  .toast-error.visible { display: block; }
+
+  .form-footer { text-align: center; margin-top: 24px; font-size: 12px; color: #9e9e9e; }
+
+  /* States section */
+  .states { display: flex; gap: 16px; margin-top: 24px; }
+  .state-box { flex: 1; border: 1px dashed #bdbdbd; padding: 12px; font-size: 12px; }
+  .state-box h4 { font-size: 11px; text-transform: uppercase; color: #757575; margin-bottom: 8px; letter-spacing: 0.5px; }
+
+  /* Annotations */
+  .annotations { background: #f5f5f5; border: 1px solid #e0e0e0; padding: 20px; margin-top: 32px; }
+  .annotations h3 { font-size: 14px; margin-bottom: 12px; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; }
+  .annotations ul { padding-left: 20px; }
+  .annotations li { margin-bottom: 6px; font-size: 13px; line-height: 1.5; }
+  .annotations code { background: #e0e0e0; padding: 1px 5px; font-family: monospace; font-size: 12px; }
+
+  .footer-nav { background: #e0e0e0; padding: 12px 24px; font-size: 12px; }
+  .footer-nav a { color: #424242; margin-right: 16px; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-brand">💎 Jewelry AI — Lead Automation Platform</span>
+  <a href="WF-000-screen-index.html" class="nav-back">← Back to Index</a>
+</div>
+
+<div class="page-wrapper">
+  <div>
+    <!-- LOGIN CARD -->
+    <div class="login-card">
+      <div class="login-logo">💎</div>
+      <div class="login-title">Jewelry AI</div>
+      <div class="login-subtitle">Lead Automation Platform — Sign In</div>
+
+      <!-- Error toast: shown on invalid credentials -->
+      <div class="toast-error visible">
+        <!-- [A3] Generic error — never reveals whether username exists -->
+        ⚠ Invalid username or password
+      </div>
+
+      <form>
+        <div class="form-group">
+          <label for="username">Username</label>
+          <!-- [A1] Bound to POST /api/v1/auth/login → body.username -->
+          <input type="text" id="username" placeholder="your.username" value="john.smith">
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <!-- [A2] Bound to POST /api/v1/auth/login → body.password (never stored in session) -->
+          <input type="password" id="password" placeholder="••••••••" value="••••••••">
+          <div class="field-error visible">Password is required</div>
+        </div>
+
+        <button type="submit" class="btn-primary">Sign In</button>
+      </form>
+
+      <div class="form-footer">
+        Forgot your password? Contact your administrator.
+      </div>
+    </div>
+
+    <!-- STATE EXAMPLES -->
+    <div class="states">
+      <div class="state-box">
+        <h4>State: Loading</h4>
+        <input type="text" value="john.smith" disabled>
+        <br><br>
+        <button style="width:100%; background:#9e9e9e; color:#fff; border:none; padding:12px; font-size:15px;">Signing in…</button>
+      </div>
+      <div class="state-box">
+        <h4>State: Success → Redirect</h4>
+        <p style="color:#424242; font-size:13px; margin-top:8px;">Login successful.<br>Redirecting to dashboard…</p>
+        <!-- [A4] Redirect target: WF-002 (Lead Pipeline Dashboard) -->
+      </div>
+    </div>
+
+    <!-- ANNOTATIONS -->
+    <div class="annotations">
+      <h3>Annotations — WF-001: Login</h3>
+      <ul>
+        <li><strong>[A1]</strong> <code>username</code> field → <code>POST /api/v1/auth/login</code> body field <code>username</code></li>
+        <li><strong>[A2]</strong> <code>password</code> field → <code>POST /api/v1/auth/login</code> body field <code>password</code>. Never stored in <code>localStorage</code> or session state beyond login.</li>
+        <li><strong>[A3]</strong> Error toast message is always "Invalid username or password" — no distinction between wrong username and wrong password (security rule US-039 AC3).</li>
+        <li><strong>[A4]</strong> On 200 response, store <code>access_token</code> and <code>refresh_token</code> in <code>st.session_state</code>. Redirect to WF-002.</li>
+        <li><strong>[A5]</strong> <code>role</code> returned in login response → stored as <code>st.session_state["role"]</code> → used for role-based screen visibility.</li>
+        <li><strong>[A6]</strong> Token refresh happens silently before expiry. No UI for refresh — handled by API client interceptor.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="footer-nav">
+  <strong>Navigation:</strong>
+  <a href="WF-000-screen-index.html">← Index</a>
+  <a href="WF-002-lead-pipeline-dashboard.html">Next: Lead Dashboard →</a>
+</div>
+
+</body>
+</html>

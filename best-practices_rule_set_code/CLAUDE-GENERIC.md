@@ -102,6 +102,7 @@ Every project should maintain the following documentation categories. The specif
 | **Error & Observability** | Exception hierarchy, structured logging, correlation IDs |
 | **DevOps & Deployment** | Docker, CI/CD, environment validation, deployment checklist |
 | **Performance & Caching** | Cache patterns, N+1 prevention, connection pooling |
+| **UI Wireframes** | HTML wireframe format, file naming (WF-NNN), screen anatomy, component library, API annotation pattern, DoD checklist | [ui-wireframe-rules.md](./docs/rules/ui-wireframe-rules.md) |
 
 ### Agile Planning
 | Category | Content |

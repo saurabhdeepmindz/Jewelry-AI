@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<!--
+  Screen:     CSV Upload
+  File:       WF-007-csv-upload.html
+  Epic:       EPIC-02
+  Stories:    US-006 (CSV parsing), US-008 (async task), US-009 (job status polling)
+  Actor(s):   rep, manager, admin
+  API calls:  POST /api/v1/leads/upload  (multipart/form-data)
+              GET  /api/v1/leads/jobs/{job_id}  (poll every 2s)
+  Updated:    2026-03-19
+  Notes:      File validated synchronously (columns + batch size) before task dispatch.
+              Returns job_id immediately. Polling section appears after upload.
+              Max 500 rows per batch. UTF-8 required.
+              Implementation: src/ui/pages/upload.py
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>[WF-007] CSV Upload — Jewelry AI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; color: #212121; font-size: 14px; }
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar { width: 220px; background: #212121; color: #fff; flex-shrink: 0; }
+  .sidebar-brand { padding: 20px 16px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #424242; }
+  .sidebar-brand span { font-size: 12px; color: #9e9e9e; display: block; }
+  .sidebar-user { padding: 12px 16px; border-bottom: 1px solid #424242; font-size: 12px; }
+  .sidebar-user .role { display: inline-block; background: #424242; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-top: 4px; }
+  .sidebar-nav a { display: block; padding: 10px 16px; color: #bdbdbd; text-decoration: none; font-size: 13px; }
+  .sidebar-nav a.active { background: #424242; color: #fff; }
+  .sidebar-section { padding: 8px 16px; font-size: 10px; text-transform: uppercase; color: #757575; letter-spacing: 1px; margin-top: 8px; }
+
+  .main { flex: 1; overflow: auto; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .topbar h1 { font-size: 18px; }
+  .breadcrumb { font-size: 12px; color: #757575; }
+  .breadcrumb a { color: #424242; }
+
+  .content { padding: 24px; max-width: 800px; }
+
+  .panel { background: #fff; border: 1px solid #e0e0e0; margin-bottom: 20px; }
+  .panel-header { padding: 14px 16px; border-bottom: 1px solid #e0e0e0; font-weight: bold; font-size: 14px; }
+  .panel-body { padding: 20px; }
+
+  /* Upload zone */
+  .upload-zone { border: 2px dashed #bdbdbd; padding: 40px 24px; text-align: center; background: #f5f5f5; cursor: pointer; transition: border-color 0.2s; }
+  .upload-zone:hover { border-color: #424242; }
+  .upload-zone.dragover { border-color: #212121; background: #e0e0e0; }
+  .upload-icon { font-size: 36px; margin-bottom: 12px; }
+  .upload-label { font-size: 15px; font-weight: bold; margin-bottom: 6px; }
+  .upload-hint { font-size: 13px; color: #757575; }
+  .upload-file-input { display: none; }
+
+  /* File selected state */
+  .file-selected { border: 1px solid #e0e0e0; padding: 12px 16px; display: flex; align-items: center; gap: 12px; background: #fff; margin-top: 12px; }
+  .file-icon { font-size: 24px; }
+  .file-name { font-weight: bold; font-size: 13px; }
+  .file-size { font-size: 12px; color: #757575; }
+  .file-remove { margin-left: auto; cursor: pointer; color: #9e9e9e; font-size: 18px; }
+
+  .btn-primary { background: #212121; color: #fff; border: none; padding: 10px 24px; cursor: pointer; font-size: 14px; }
+  .btn-primary:disabled { background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; }
+  .btn-secondary { background: #fff; color: #424242; border: 1px solid #424242; padding: 9px 18px; cursor: pointer; font-size: 13px; }
+
+  /* Validation errors */
+  .validation-error { background: #f5f5f5; border-left: 4px solid #212121; padding: 12px 16px; font-size: 13px; margin-top: 12px; }
+  .validation-error strong { display: block; margin-bottom: 4px; }
+
+  /* Requirements box */
+  .requirements { background: #f5f5f5; border: 1px solid #e0e0e0; padding: 16px; font-size: 13px; }
+  .requirements h4 { font-size: 13px; margin-bottom: 10px; }
+  .requirements table { border-collapse: collapse; width: 100%; }
+  .requirements th { background: #e0e0e0; padding: 6px 10px; font-size: 12px; text-align: left; }
+  .requirements td { padding: 6px 10px; font-size: 12px; border-bottom: 1px solid #e0e0e0; font-family: monospace; }
+  .req-required { color: #212121; font-weight: bold; }
+  .req-optional { color: #757575; }
+
+  /* Progress / polling */
+  .progress-panel { background: #fff; border: 1px solid #e0e0e0; padding: 20px; margin-bottom: 20px; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .progress-header h3 { font-size: 15px; }
+  .job-id { font-family: monospace; font-size: 11px; color: #9e9e9e; background: #f5f5f5; padding: 3px 8px; }
+  .progress-bar-wrap { background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+  .progress-bar { background: #424242; height: 8px; border-radius: 4px; width: 68%; animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  .progress-status { font-size: 13px; color: #757575; }
+  .poll-note { font-size: 11px; color: #9e9e9e; margin-top: 8px; }
+
+  /* Results summary */
+  .results-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .result-card { border: 1px solid #e0e0e0; padding: 14px; text-align: center; }
+  .result-value { font-size: 28px; font-weight: bold; }
+  .result-label { font-size: 11px; color: #757575; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .result-created { color: #212121; }
+  .result-dup { color: #757575; }
+  .result-invalid { color: #9e9e9e; }
+  .result-error { color: #424242; }
+
+  .success-banner { background: #e0e0e0; border-left: 4px solid #212121; padding: 12px 16px; font-size: 13px; margin-bottom: 12px; }
+  .error-banner { background: #f5f5f5; border-left: 4px solid #212121; padding: 12px 16px; font-size: 13px; margin-bottom: 12px; }
+
+  /* Annotations */
+  .annotations { background: #fff; border: 1px solid #e0e0e0; padding: 20px; margin-top: 20px; }
+  .annotations h3 { font-size: 14px; margin-bottom: 12px; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; }
+  .annotations ul { padding-left: 20px; }
+  .annotations li { margin-bottom: 6px; font-size: 13px; line-height: 1.5; }
+  .annotations code { background: #e0e0e0; padding: 1px 5px; font-family: monospace; font-size: 12px; }
+
+  .footer-nav { background: #e0e0e0; padding: 12px 24px; font-size: 12px; }
+  .footer-nav a { color: #424242; margin-right: 16px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-brand">💎 Jewelry AI<span>Lead Automation</span></div>
+    <div class="sidebar-user">John Smith<br><span class="role">rep</span></div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section">Main</div>
+      <a href="WF-002-lead-pipeline-dashboard.html">📋 Leads</a>
+      <a href="#" class="active">📤 Upload CSV</a>
+      <div class="sidebar-section">Manager</div>
+      <a href="WF-004-outreach-review-queue.html" style="color:#757575;">📬 Review Queue</a>
+      <a href="WF-005-analytics-funnel.html">📊 Analytics</a>
+      <div class="sidebar-section">Admin</div>
+      <a href="WF-006-admin-users.html" style="color:#757575;">👤 Users</a>
+      <div style="padding:16px 16px 0;"><a href="WF-001-login.html" style="color:#9e9e9e; font-size:12px; text-decoration:none;">🚪 Logout</a></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h1>Upload Leads CSV</h1>
+        <div class="breadcrumb"><a href="WF-002-lead-pipeline-dashboard.html">Leads</a> / Upload CSV</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- STEP 1: UPLOAD FORM -->
+      <div class="panel">
+        <div class="panel-header">Step 1 — Select CSV File</div>
+        <div class="panel-body">
+
+          <!-- DROP ZONE -->
+          <!-- [A1] Accepts single .csv file. Validates client-side: extension, size < 5MB -->
+          <div class="upload-zone">
+            <div class="upload-icon">📄</div>
+            <div class="upload-label">Drop your CSV file here</div>
+            <div class="upload-hint">or <u style="cursor:pointer;">browse to select</u> · CSV only · Max 500 rows · UTF-8 encoding</div>
+          </div>
+
+          <!-- FILE SELECTED STATE (shown after file picked) -->
+          <div class="file-selected">
+            <span class="file-icon">📄</span>
+            <div>
+              <!-- [A2] File name and size shown after selection -->
+              <div class="file-name">buyer_list_gmt_march2026.csv</div>
+              <div class="file-size">14.2 KB · 287 rows detected</div>
+            </div>
+            <span class="file-remove">✕</span>
+          </div>
+
+          <!-- VALIDATION ERROR (shown on sync validation failure) -->
+          <!-- [A3] Shown immediately after POST if API returns 422 -->
+          <div class="validation-error" style="display:none;">
+            <strong>⚠ Upload failed — file cannot be processed</strong>
+            Missing required column: <code>company_name</code>. Please check your CSV headers and try again.
+          </div>
+
+          <div style="margin-top:16px; display:flex; gap:8px; align-items:center;">
+            <!-- [A4] Disabled until file selected -->
+            <button class="btn-primary">📤 Upload &amp; Process</button>
+            <span style="font-size:12px; color:#9e9e9e;">Processing runs in background — you can navigate away.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CSV FORMAT REQUIREMENTS -->
+      <div class="panel">
+        <div class="panel-header">CSV Format Requirements</div>
+        <div class="panel-body">
+          <div class="requirements">
+            <h4>Required &amp; Optional Columns</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>Column Name</th>
+                  <th>Required?</th>
+                  <th>Valid Values</th>
+                  <th>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- [A5] Column spec from US-006 AC1 and ingestion_service.py -->
+                <tr>
+                  <td><code>company_name</code></td>
+                  <td class="req-required">Required</td>
+                  <td>Any non-empty string</td>
+                  <td>Acme Jewelers Inc</td>
+                </tr>
+                <tr>
+                  <td><code>source</code></td>
+                  <td class="req-required">Required</td>
+                  <td>gmt, trade_book, rapid_list, manual, api</td>
+                  <td>gmt</td>
+                </tr>
+                <tr>
+                  <td><code>domain</code></td>
+                  <td class="req-optional">Optional</td>
+                  <td>Any domain (used for deduplication)</td>
+                  <td>acmejewelers.com</td>
+                </tr>
+                <tr>
+                  <td><code>country</code></td>
+                  <td class="req-optional">Optional</td>
+                  <td>Country name or ISO code</td>
+                  <td>US</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="margin-top:12px; font-size:12px; color:#757575; line-height:1.6;">
+              <strong>Limits:</strong> Max 500 rows per upload · UTF-8 encoding required · First row must be header<br>
+              <strong>Deduplication:</strong> Rows with a domain already in the database (active leads) are skipped and counted as "duplicates"<br>
+              <strong>Invalid rows:</strong> Rows with empty company_name or invalid source are skipped and counted as "invalid"
+            </div>
+
+            <div style="margin-top:12px; background:#fff; border:1px solid #e0e0e0; padding:10px; font-family:monospace; font-size:12px;">
+              <strong>Example CSV:</strong><br>
+              company_name,domain,country,source<br>
+              Acme Jewelers Inc,acmejewelers.com,US,gmt<br>
+              Beta Diamond Co,betadiamonds.com,UK,trade_book<br>
+              No Domain Corp,,IN,manual
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: PROCESSING (shown after upload dispatched) -->
+      <div class="progress-panel">
+        <div class="progress-header">
+          <h3>Step 2 — Processing</h3>
+          <!-- [A6] job_id from POST /api/v1/leads/upload response -->
+          <span class="job-id">job_id: f47ac10b-58cc-4372-a567-0e02b2c3d479</span>
+        </div>
+        <!-- [A7] Progress bar animates while status == "processing" -->
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" style="width:68%;"></div>
+        </div>
+        <div class="progress-status">
+          Processing rows… 193 of 287 completed
+          <!-- [A8] Approximate progress (if API returns partial counts); otherwise just "Processing…" -->
+        </div>
+        <div class="poll-note">
+          Polling every 2 seconds · <a href="#" style="color:#424242;">Cancel</a>
+          <!-- [A9] Polling: GET /api/v1/leads/jobs/{job_id} every 2s until status != "processing" -->
+        </div>
+      </div>
+
+      <!-- STEP 3: RESULTS (shown when status == "completed") -->
+      <div class="panel">
+        <div class="panel-header">Step 3 — Results</div>
+        <div class="panel-body">
+
+          <!-- SUCCESS BANNER -->
+          <div class="success-banner">
+            ✓ Processing complete — 80 leads added to the pipeline
+          </div>
+
+          <!-- RESULTS GRID -->
+          <!-- [A10] From GET /api/v1/leads/jobs/{job_id} final response -->
+          <div class="results-grid">
+            <div class="result-card">
+              <div class="result-value result-created">80</div>
+              <div class="result-label">Created</div>
+            </div>
+            <div class="result-card">
+              <div class="result-value result-dup">15</div>
+              <div class="result-label">Duplicates Skipped</div>
+            </div>
+            <div class="result-card">
+              <div class="result-value result-invalid">5</div>
+              <div class="result-label">Invalid Rows</div>
+            </div>
+            <div class="result-card">
+              <div class="result-value result-error">0</div>
+              <div class="result-label">Errors</div>
+            </div>
+          </div>
+
+          <!-- [A11] Duplicate details hint -->
+          <div style="font-size:12px; color:#757575; margin-bottom:16px;">
+            15 rows skipped — leads with matching domains already exist in the database.<br>
+            5 rows skipped — missing <code>company_name</code> or invalid <code>source</code> value.
+          </div>
+
+          <div style="display:flex; gap:8px;">
+            <a href="WF-002-lead-pipeline-dashboard.html"><button class="btn-primary">View Lead Pipeline →</button></a>
+            <button class="btn-secondary">Upload Another File</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAILED STATE (shown when status == "failed") -->
+      <div class="panel" style="display:none;">
+        <div class="panel-header">Step 3 — Results</div>
+        <div class="panel-body">
+          <!-- [A12] From GET /api/v1/leads/jobs/{job_id} when status == "failed" -->
+          <div class="error-banner">
+            ⚠ Processing failed — <strong>Database connection failed after 3 retries</strong>
+          </div>
+          <p style="font-size:13px; color:#757575; margin-bottom:16px;">No leads were created. The file has not been processed. Please try again or contact your system administrator.</p>
+          <button class="btn-primary">Try Again</button>
+        </div>
+      </div>
+
+      <!-- ANNOTATIONS -->
+      <div class="annotations">
+        <h3>Annotations — WF-007: CSV Upload</h3>
+        <ul>
+          <li><strong>[A1]</strong> Upload zone: Streamlit <code>st.file_uploader(type=["csv"])</code>. Validates extension client-side. Server validates content.</li>
+          <li><strong>[A2]</strong> File info: show filename + estimated row count (count CSV newlines client-side) after file selected.</li>
+          <li><strong>[A3]</strong> Validation errors (422 response): "Missing required column: company_name" or "Batch size {N} exceeds maximum 500". No leads created on 422.</li>
+          <li><strong>[A4]</strong> Upload button: disabled until file selected. Enabled once file chosen.</li>
+          <li><strong>[A5]</strong> Column spec: <code>company_name</code> (required), <code>source</code> (required, enum), <code>domain</code> (optional), <code>country</code> (optional).</li>
+          <li><strong>[A6]</strong> <code>job_id</code>: UUID returned in 202 response body. Display as reference for support queries.</li>
+          <li><strong>[A7]</strong> Progress bar: animates while <code>status == "processing"</code>. No real % — use indeterminate animation.</li>
+          <li><strong>[A8]</strong> Row progress: show <code>created + skipped_duplicates + skipped_invalid</code> as approximate "processed" count if available in intermediate polling.</li>
+          <li><strong>[A9]</strong> Polling: <code>GET /api/v1/leads/jobs/{job_id}</code> every 2s. Max wait: 5 minutes. Show timeout error if still processing after 5 min.</li>
+          <li><strong>[A10]</strong> Results: from final <code>GET /api/v1/leads/jobs/{job_id}</code> when <code>status == "completed"</code>. Fields: <code>created</code>, <code>skipped_duplicates</code>, <code>skipped_invalid</code>, <code>errors</code>.</li>
+          <li><strong>[A11]</strong> Result annotations: explain why rows were skipped (duplicate domain / invalid source or company_name). Static explanatory text.</li>
+          <li><strong>[A12]</strong> Failed state: shown when <code>status == "failed"</code>. Display <code>error</code> field from job response. Show retry button.</li>
+        </ul>
+      </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="footer-nav">
+  <strong>Navigation:</strong>
+  <a href="WF-000-screen-index.html">← Index</a>
+  <a href="WF-002-lead-pipeline-dashboard.html">← Lead Dashboard</a>
+</div>
+
+</body>
+</html>

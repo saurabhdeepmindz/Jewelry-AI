@@ -64,7 +64,9 @@ async def readiness() -> JSONResponse:
     # ── Redis check ──────────────────────────────────────────────────────────
     t1 = time.monotonic()
     try:
-        r = aioredis.from_url(_settings.REDIS_URL, socket_connect_timeout=2)
+        r = aioredis.from_url(  # type: ignore[no-untyped-call]
+            _settings.REDIS_URL, socket_connect_timeout=2
+        )
         await r.ping()
         await r.aclose()
         checks["redis"] = "ok"

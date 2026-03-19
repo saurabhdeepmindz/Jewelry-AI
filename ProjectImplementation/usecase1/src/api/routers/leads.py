@@ -31,8 +31,8 @@ async def upload_leads_csv(file: UploadFile) -> dict:  # type: ignore[type-arg]
     content_bytes = await file.read()
     try:
         csv_content = content_bytes.decode("utf-8")
-    except UnicodeDecodeError:
-        raise ValidationException("CSV file must be UTF-8 encoded")
+    except UnicodeDecodeError as exc:
+        raise ValidationException("CSV file must be UTF-8 encoded") from exc
 
     # Synchronous validation — fail before dispatching task
     reader = csv.DictReader(io.StringIO(csv_content))
@@ -53,7 +53,7 @@ async def upload_leads_csv(file: UploadFile) -> dict:  # type: ignore[type-arg]
 
 
 @router.get("/jobs/{job_id}", response_model=IngestionSummary)
-async def get_job_status(job_id: str) -> IngestionSummary:
+async def get_ingestion_job_status(job_id: str) -> IngestionSummary:
     """Poll ingestion job status.
 
     Returns 404 if job_id is unknown (expired TTL or invalid).

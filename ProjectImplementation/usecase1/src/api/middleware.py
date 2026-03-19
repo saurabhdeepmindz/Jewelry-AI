@@ -24,7 +24,7 @@ class TraceIDMiddleware(BaseHTTPMiddleware):
         request.state.trace_id = trace_id
 
         try:
-            response: Response = await call_next(request)  # type: ignore[arg-type]
+            response: Response = await call_next(request)  # type: ignore[operator]
         finally:
             trace_id_var.reset(token)
 

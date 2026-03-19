@@ -30,20 +30,81 @@ STAGE 7: Continuous Quality   ⬜ Throughout development
 
 ---
 
+## MANDATORY: Rule Folders — Read Before Any Work
+
+Both rule folders MUST be read before writing any code, test, migration, or artifact. These folders contain the authoritative standards that govern all development in this project.
+
+### `../../best-practices_rule_set_code/` — Generic Engineering Rules
+
+| File | Must Read Before |
+|---|---|
+| [CLAUDE-GENERIC.md](../../best-practices_rule_set_code/CLAUDE-GENERIC.md) | Starting any work in this project |
+| [RULES.md](../../best-practices_rule_set_code/RULES.md) | Writing any code or making architectural decisions |
+| [docs/rules/development-execution.md](../../best-practices_rule_set_code/docs/rules/development-execution.md) | Starting any increment (N.1–N.8 anatomy) |
+| [docs/rules/testing-rules.md](../../best-practices_rule_set_code/docs/rules/testing-rules.md) | Writing any test (respx, factory_boy, coverage gate) |
+| [docs/rules/testing-quality.md](../../best-practices_rule_set_code/docs/rules/testing-quality.md) | Writing any test (quality standards, DoD gate) |
+| [docs/rules/api-contracts.md](../../best-practices_rule_set_code/docs/rules/api-contracts.md) | Designing or modifying any API endpoint |
+| [docs/rules/coding-style-rules.md](../../best-practices_rule_set_code/docs/rules/coding-style-rules.md) | Writing any source code |
+| [docs/rules/security-rules.md](../../best-practices_rule_set_code/docs/rules/security-rules.md) | Before any commit touching auth, secrets, or user input |
+| [docs/rules/data-rules.md](../../best-practices_rule_set_code/docs/rules/data-rules.md) | Designing schema, writing migrations, or ORM models |
+| [docs/rules/error-observability.md](../../best-practices_rule_set_code/docs/rules/error-observability.md) | Adding exceptions, logging, or health checks |
+| [docs/rules/devops-deployment.md](../../best-practices_rule_set_code/docs/rules/devops-deployment.md) | Modifying Docker, CI/CD, Makefile, or env config |
+| [docs/rules/ai-ml-rules.md](../../best-practices_rule_set_code/docs/rules/ai-ml-rules.md) | Writing LangChain, LangGraph, Celery, or ML code |
+| [docs/rules/performance-caching-rules.md](../../best-practices_rule_set_code/docs/rules/performance-caching-rules.md) | Adding Redis, caching, or query optimization |
+| [docs/rules/frontend-streamlit-rules.md](../../best-practices_rule_set_code/docs/rules/frontend-streamlit-rules.md) | Writing any Streamlit UI code |
+| [docs/rules/workflow-rules.md](../../best-practices_rule_set_code/docs/rules/workflow-rules.md) | Writing n8n, LangGraph, or Celery workflow code |
+| [docs/rules/configuration-rules.md](../../best-practices_rule_set_code/docs/rules/configuration-rules.md) | Changing settings, env vars, or Pydantic Settings |
+| [docs/rules/synthetic-data-rules.md](../../best-practices_rule_set_code/docs/rules/synthetic-data-rules.md) | Creating seed scripts, factories, or demo data |
+| [docs/rules/functional-landscape-rules.md](../../best-practices_rule_set_code/docs/rules/functional-landscape-rules.md) | Creating or modifying the functional landscape |
+| [docs/rules/actor-roles-rules.md](../../best-practices_rule_set_code/docs/rules/actor-roles-rules.md) | Defining actors, roles, or RBAC permissions |
+| [docs/rules/epic-rules.md](../../best-practices_rule_set_code/docs/rules/epic-rules.md) | Writing epics or planning features |
+| [docs/rules/user-story-rules.md](../../best-practices_rule_set_code/docs/rules/user-story-rules.md) | Writing user stories or acceptance criteria |
+| [docs/rules/api-design-rules.md](../../best-practices_rule_set_code/docs/rules/api-design-rules.md) | Designing REST API endpoints and response shapes |
+| [docs/rules/ui-wireframe-rules.md](../../best-practices_rule_set_code/docs/rules/ui-wireframe-rules.md) | Creating UI wireframes or mockups |
+
+### `../../project-specific-guidelines/` — Jewelry AI Project Rules
+
+| File | Must Read Before |
+|---|---|
+| [EXECUTION_WORKFLOW.md](../../project-specific-guidelines/EXECUTION_WORKFLOW.md) | Starting any stage or increment |
+| [rules/functional-landscape-rules.md](../../project-specific-guidelines/rules/functional-landscape-rules.md) | Creating functional landscape artifacts |
+| [rules/actor-roles-rules.md](../../project-specific-guidelines/rules/actor-roles-rules.md) | Defining actors or RBAC for Jewelry AI |
+| [rules/epic-rules.md](../../project-specific-guidelines/rules/epic-rules.md) | Writing epics (EPIC-01 to EPIC-15) |
+| [rules/user-story-rules.md](../../project-specific-guidelines/rules/user-story-rules.md) | Writing user stories for any epic |
+| [rules/testing-rules.md](../../project-specific-guidelines/rules/testing-rules.md) | Writing tests — per-epic test index, respx, factory_boy |
+| [docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md](../../project-specific-guidelines/docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md) | Understanding module inventory before any increment |
+| [docs/actors/ACTORS.md](../../project-specific-guidelines/docs/actors/ACTORS.md) | Understanding actor permissions before any feature |
+
+### `rules/` — Usecase1 Local Rules (Extend Project-Specific)
+
+| File | Must Read Before |
+|---|---|
+| [rules/functional-landscape-rules.md](rules/functional-landscape-rules.md) | Stage 1 artifacts |
+| [rules/actor-roles-rules.md](rules/actor-roles-rules.md) | Stage 1 actor definitions |
+| [rules/epic-rules.md](rules/epic-rules.md) | Stage 5 epic planning |
+| [rules/user-story-rules.md](rules/user-story-rules.md) | Stage 5 story writing |
+| [rules/testing-rules.md](rules/testing-rules.md) | Every test file — local pytest patterns, factory_boy, mocking |
+
+---
+
 ## Pre-Code Reading Order
 
 Before writing any code, read in this order:
 
 1. **[../../best-practices_rule_set_code/CLAUDE-GENERIC.md](../../best-practices_rule_set_code/CLAUDE-GENERIC.md)** — Generic operating principles
 2. **[../../best-practices_rule_set_code/RULES.md](../../best-practices_rule_set_code/RULES.md)** — Master engineering rules
-3. **[docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md](docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md)** — Module inventory, 7 layers, actor–module matrix *(Stage 1)*
-4. **[docs/actors/ACTORS.md](docs/actors/ACTORS.md)** — Actor definitions, roles, permissions, data scoping *(Stage 1)*
-5. **[docs/architecture/Architecture.md](docs/architecture/Architecture.md)** — Project folder structure, logging, exception hierarchy *(Stage 3)*
-6. **[docs/architecture/DB_SCHEMA.md](docs/architecture/DB_SCHEMA.md)** — Database schema, enums, migration index *(Stage 3)*
-7. **[docs/architecture/API_SPEC.md](docs/architecture/API_SPEC.md)** — API endpoints, request/response shapes *(Stage 3)*
-8. **[rules/testing-rules.md](rules/testing-rules.md)** — Unit/integration test patterns, factory_boy, mocking, coverage gate *(Stage 0)*
-9. **Relevant Epic** in `agile/epics/` — Scope and acceptance criteria *(Stage 5)*
-10. **Relevant User Story** in `agile/stories/` — Behaviour, ACs, DoD *(Stage 5)*
+3. **[../../best-practices_rule_set_code/docs/rules/development-execution.md](../../best-practices_rule_set_code/docs/rules/development-execution.md)** — Increment anatomy (N.1 Domain → N.8 UI)
+4. **[../../best-practices_rule_set_code/docs/rules/testing-rules.md](../../best-practices_rule_set_code/docs/rules/testing-rules.md)** — respx, factory_boy, coverage gate, DoD
+5. **[../../project-specific-guidelines/EXECUTION_WORKFLOW.md](../../project-specific-guidelines/EXECUTION_WORKFLOW.md)** — Stage 0–7 sequence for Jewelry AI
+6. **[../../project-specific-guidelines/rules/testing-rules.md](../../project-specific-guidelines/rules/testing-rules.md)** — Per-epic test file index, project-specific patterns
+7. **[docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md](docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md)** — Module inventory, 7 layers, actor–module matrix *(Stage 1)*
+8. **[docs/actors/ACTORS.md](docs/actors/ACTORS.md)** — Actor definitions, roles, permissions, data scoping *(Stage 1)*
+9. **[docs/architecture/Architecture.md](docs/architecture/Architecture.md)** — Project folder structure, logging, exception hierarchy *(Stage 3)*
+10. **[docs/architecture/DB_SCHEMA.md](docs/architecture/DB_SCHEMA.md)** — Database schema, enums, migration index *(Stage 3)*
+11. **[docs/architecture/API_SPEC.md](docs/architecture/API_SPEC.md)** — API endpoints, request/response shapes *(Stage 3)*
+12. **[rules/testing-rules.md](rules/testing-rules.md)** — Local pytest patterns, factory_boy, mocking, coverage gate *(Stage 0)*
+13. **Relevant Epic** in `agile/epics/` — Scope and acceptance criteria *(Stage 5)*
+14. **Relevant User Story** in `agile/stories/` — Behaviour, ACs, DoD *(Stage 5)*
 
 ---
 

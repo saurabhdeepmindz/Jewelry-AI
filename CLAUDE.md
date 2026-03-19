@@ -11,6 +11,62 @@
 
 ---
 
+## MANDATORY: Rule Folders — Read Before Any Work
+
+**Before writing any code, creating any artifact, or starting any increment, ALL files in BOTH of these folders MUST be read and followed:**
+
+### 1. Generic Framework Rules — `best-practices_rule_set_code/`
+
+This folder contains the reusable, project-agnostic engineering standards that apply to every project built on this framework.
+
+| File | Must Read Before |
+|---|---|
+| `CLAUDE-GENERIC.md` | Starting any project session |
+| `RULES.md` | Writing any code |
+| `ARCHITECTURE.md` | Designing folder structure |
+| `CodingStandards-python.md` | Writing any Python class or function |
+| `DesignPatterns.md` | Selecting implementation patterns |
+| `docs/rules/development-execution.md` | **Starting any increment** — increment anatomy, layer build order, gates |
+| `docs/rules/testing-rules.md` | **Writing any test** — respx, factory_boy, TDD workflow, coverage gate |
+| `docs/rules/testing-quality.md` | Writing any test — coverage thresholds, mocking rules |
+| `docs/rules/api-contracts.md` | Writing any router or endpoint |
+| `docs/rules/database-postgres.md` | Writing any migration, repository, or ORM model |
+| `docs/rules/error-observability.md` | Writing exception handling or logging |
+| `docs/rules/security.md` | Writing any endpoint that handles auth or user data |
+| `docs/rules/devops-deployment.md` | Writing Dockerfiles, CI pipelines, Makefiles |
+| `docs/rules/functional-landscape-rules.md` | Running Stage 1 Discovery |
+| `docs/rules/actor-roles-rules.md` | Defining actors or RBAC |
+| `docs/rules/epic-rules.md` | Writing Epics |
+| `docs/rules/user-story-rules.md` | Writing User Stories |
+| `docs/rules/ui-wireframe-rules.md` | Creating HTML wireframes (Stage 3.6) |
+| `docs/rules/frontend-streamlit-rules.md` | Writing Streamlit UI pages |
+
+### 2. Project-Specific Guidelines — `project-specific-guidelines/`
+
+This folder contains Jewelry AI-specific decisions, overrides, and artifacts that extend the generic framework for this project.
+
+| File | Must Read Before |
+|---|---|
+| `EXECUTION_WORKFLOW.md` | Starting any stage or increment |
+| `CodingStandards.md` | Writing any Python code for this project |
+| `DesignPatterns.md` | Implementing services, repositories, or agents |
+| `HLD.md` | Making any architectural decision |
+| `LLD.md` | Implementing any service, task, or router |
+| `Plan.md` | Planning or prioritising any work |
+| `rules/functional-landscape-rules.md` | Running Stage 1 Discovery |
+| `rules/actor-roles-rules.md` | Defining RBAC or access control |
+| `rules/epic-rules.md` | Writing or scoping Epics |
+| `rules/user-story-rules.md` | Writing User Stories |
+| `rules/testing-rules.md` | **Writing any test** — project-specific patterns, respx, factory_boy, Celery task testing |
+| `rules/ui-wireframe-rules.md` | Creating HTML wireframes |
+| `docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md` | Understanding system scope |
+| `docs/actors/ACTORS.md` | Implementing any role-based logic |
+| `docs/wireframes/` | Implementing any Streamlit UI screen |
+
+> **Rule:** If a project-specific file exists for a topic, it takes precedence over the generic version. Both must be read — the generic provides the base, the project-specific provides the override.
+
+---
+
 ## Pre-Code Reading Order
 
 Before writing any code, read in this order:

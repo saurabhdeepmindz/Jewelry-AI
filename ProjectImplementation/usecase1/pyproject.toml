@@ -87,6 +87,12 @@ ignore = [
     "N818",   # Exception names — some intentionally don't end in Error
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "N806",   # PascalCase mock variable names are conventional in tests (MockFoo, MockRepo)
+    "E501",   # Long lines acceptable in test fixtures and inline data
+]
+
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
 

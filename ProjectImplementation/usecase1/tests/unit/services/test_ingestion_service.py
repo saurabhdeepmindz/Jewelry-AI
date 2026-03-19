@@ -2,8 +2,9 @@
 
 TDD: All external dependencies (DB session, repository) are mocked.
 """
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from src.core.exceptions import ValidationException
 from src.services.ingestion_service import MAX_BATCH_SIZE, ingest_csv

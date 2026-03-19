@@ -10,7 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class LeadStatus(str, enum.Enum):
+class LeadStatus(enum.StrEnum):
     ingested = "ingested"
     enriched = "enriched"
     matched = "matched"
@@ -21,13 +21,13 @@ class LeadStatus(str, enum.Enum):
     disqualified = "disqualified"
 
 
-class MatchStatus(str, enum.Enum):
+class MatchStatus(enum.StrEnum):
     pending = "pending"
     matched = "matched"
     no_match = "no_match"
 
 
-class LeadSource(str, enum.Enum):
+class LeadSource(enum.StrEnum):
     gmt = "gmt"
     trade_book = "trade_book"
     rapid_list = "rapid_list"

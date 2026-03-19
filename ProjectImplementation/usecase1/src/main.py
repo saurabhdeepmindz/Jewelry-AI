@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.api.middleware import TraceIDMiddleware
-from src.api.routers import health, leads
+from src.api.routers import enrichment, health, leads
 from src.core.config import get_settings
 from src.core.exceptions import BaseAppException
 from src.core.logging import configure_logging, get_logger
@@ -62,6 +62,7 @@ def create_app() -> FastAPI:
     # ── Routers ───────────────────────────────────────────────────────────────
     app.include_router(health.router)
     app.include_router(leads.router)
+    app.include_router(enrichment.router)
 
     # ── Startup log ───────────────────────────────────────────────────────────
     @app.on_event("startup")

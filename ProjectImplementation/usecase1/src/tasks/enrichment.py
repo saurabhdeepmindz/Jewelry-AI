@@ -1,11 +1,12 @@
-"""Celery tasks for lead ingestion.
+"""Celery tasks for contact enrichment.
 
-Task: ingest_lead_file
-Queue: ingestion
+Task: enrich_lead_task
+Queue: enrichment
 Retry: up to 3 times with exponential backoff (60s, 120s, 240s)
 """
 import asyncio
 from typing import Any
+from uuid import UUID
 
 from src.core.logging import get_logger
 from src.tasks.celery_app import celery_app
@@ -14,66 +15,69 @@ logger = get_logger(__name__)
 
 
 @celery_app.task(  # type: ignore[untyped-decorator]
-    name="tasks.ingest_lead_file",
+    name="tasks.enrich_lead",
     bind=True,
-    queue="ingestion",
+    queue="enrichment",
     acks_late=True,
     reject_on_worker_lost=True,
     max_retries=3,
 )
-def ingest_lead_file(self: Any, job_id: str, csv_content: str) -> dict[str, Any]:
-    """Process a CSV file upload and persist Lead records asynchronously.
+def enrich_lead_task(self: Any, job_id: str, lead_id: str) -> dict[str, Any]:
+    """Enrich a single lead asynchronously.
 
     Parameters
     ----------
     job_id:
-        UUID string for polling via GET /api/v1/leads/jobs/{job_id}.
-    csv_content:
-        Raw CSV text decoded from the uploaded file.
+        UUID string for polling via GET /api/v1/enrichment/jobs/{job_id}.
+    lead_id:
+        UUID string of the lead to enrich.
     """
     loop = asyncio.new_event_loop()
     try:
-        return loop.run_until_complete(_run(self, job_id, csv_content))
+        return loop.run_until_complete(_run(self, job_id, lead_id))
     finally:
         loop.close()
 
 
-async def _run(task: Any, job_id: str, csv_content: str) -> dict[str, Any]:
+async def _run(task: Any, job_id: str, lead_id: str) -> dict[str, Any]:
     from src.core.job_store import set_job_status
     from src.db.session import AsyncSessionLocal
-    from src.services.ingestion_service import ingest_csv
+    from src.services.enrichment_service import enrich_lead
 
-    # Mark as in-progress immediately
     await set_job_status(
         job_id,
         {
             "job_id": job_id,
+            "lead_id": lead_id,
             "status": "processing",
-            "created": 0,
-            "skipped_duplicates": 0,
-            "skipped_invalid": 0,
-            "errors": 0,
         },
     )
 
     try:
         async with AsyncSessionLocal() as session:
-            result = await ingest_csv(session, csv_content)
+            contact = await enrich_lead(session, UUID(lead_id))
             await session.commit()
 
         status_data: dict[str, Any] = {
             "job_id": job_id,
+            "lead_id": lead_id,
             "status": "completed",
-            "created": result.created,
-            "skipped_duplicates": result.skipped_duplicates,
-            "skipped_invalid": result.skipped_invalid,
-            "errors": result.errors,
+            "contact_id": str(contact.id),
+            "enrichment_source": contact.enrichment_source.value
+            if contact.enrichment_source
+            else None,
         }
         await set_job_status(job_id, status_data)
         return status_data
 
     except Exception as exc:
-        logger.error("Ingestion task %s failed (attempt %d): %s", job_id, task.request.retries, exc)
+        logger.error(
+            "Enrichment task %s failed for lead %s (attempt %d): %s",
+            job_id,
+            lead_id,
+            task.request.retries,
+            exc,
+        )
         retry_count = task.request.retries
         countdown = 60 * (2**retry_count)
 
@@ -82,11 +86,8 @@ async def _run(task: Any, job_id: str, csv_content: str) -> dict[str, Any]:
         except task.MaxRetriesExceededError:
             error_data: dict[str, Any] = {
                 "job_id": job_id,
+                "lead_id": lead_id,
                 "status": "failed",
-                "created": 0,
-                "skipped_duplicates": 0,
-                "skipped_invalid": 0,
-                "errors": 1,
                 "error": str(exc),
             }
             await set_job_status(job_id, error_data)

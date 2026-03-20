@@ -7,8 +7,10 @@ Enrichment strategy:
   3. If lead has a domain → try Apollo.io (full contact: name, title, email, phone, linkedin).
   4. If Apollo returns data and has an email → verify deliverability with Hunter.io.
   5. If Apollo returned None → fall back to Hunter.io email-finder (email only).
-  6. If both providers return nothing → raise IntegrationException.
-  7. Create Contact record, update lead.status = "enriched", flush.
+  6. If both direct providers return nothing → delegate to EnrichmentAgent (LangChain
+     tool-use agent that orchestrates Apollo + Hunter + Proxycurl with LLM reasoning).
+  7. If all strategies exhausted → raise IntegrationException.
+  8. Create Contact record, update lead.status = "enriched", flush.
 """
 from datetime import UTC, datetime
 from uuid import UUID
@@ -26,6 +28,11 @@ from src.integrations.apollo_client import ApolloClient
 from src.integrations.hunter_client import HunterClient
 from src.repositories.contact_repository import ContactRepository
 from src.repositories.lead_repository import LeadRepository
+
+# Lazy import to avoid loading LangChain at startup when not needed
+def _get_enrichment_agent():  # type: ignore[return]
+    from src.agents.enrichment_agent import run_enrichment_agent
+    return run_enrichment_agent
 
 logger = get_logger(__name__)
 
@@ -100,9 +107,25 @@ async def enrich_lead(session: AsyncSession, lead_id: UUID) -> ContactRead:
                 exc,
             )
 
+    # --- EnrichmentAgent fallback (LangChain: Apollo + Hunter + Proxycurl with LLM routing) ---
+    if contact_data is None and lead.domain:
+        try:
+            run_enrichment_agent = _get_enrichment_agent()
+            contact_data = await run_enrichment_agent(
+                domain=lead.domain,
+                linkedin_url=None,
+            )
+        except Exception as exc:
+            logger.warning(
+                "EnrichmentAgent failed for lead_id=%s domain=%s: %s",
+                lead_id,
+                lead.domain,
+                exc,
+            )
+
     if contact_data is None:
         raise IntegrationException(
-            "Could not enrich lead: all providers returned no data"
+            "Could not enrich lead: all providers (Apollo, Hunter, EnrichmentAgent) returned no data"
         )
 
     # --- Email verification (best-effort; failure does not block enrichment) ---

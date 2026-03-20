@@ -11,12 +11,42 @@
 | Requirement | Minimum Version | Notes |
 |---|---|---|
 | Python | 3.11 | `python --version` |
-| Docker Desktop | 4.x | With Compose V2 |
+| Docker Desktop | 4.x | With Compose V2 — enable WSL2 backend (see below) |
 | Git Bash / WSL2 | — | Required for `make` commands on Windows |
 | GNU Make | 4.x | Via Git Bash or [GnuWin32](https://gnuwin32.sourceforge.net/packages/make.htm) |
 | Git | 2.x | |
 
 > **Windows users:** All `make` commands require Git Bash or WSL2. PowerShell/CMD equivalents are listed in every section below.
+
+### Windows Setup — Do This First
+
+**1. Enable Docker Desktop WSL2 backend (recommended)**
+
+Open Docker Desktop → Settings → General → check **"Use the WSL 2 based engine"**. This prevents volume mount performance issues and avoids most Windows-specific Docker errors.
+
+**2. Fix Git line endings (required — do this before cloning or immediately after)**
+
+```powershell
+# Run once in the repo root
+git config core.autocrlf false
+git config core.eol lf
+```
+
+Or verify `.gitattributes` is present in the repo root — it enforces LF endings for all text files automatically.
+
+**3. Choose your shell**
+
+| Shell | `make` support | Recommended for |
+|---|---|---|
+| **Git Bash** | ✅ Yes | All development work — closest to Linux |
+| **WSL2** | ✅ Yes | Full Linux environment on Windows |
+| **PowerShell** | ❌ No `make` | Use raw `docker compose` commands instead |
+| **CMD** | ❌ No | Avoid |
+
+**4. Windows Defender exclusion (optional but speeds up Docker)**
+
+Add the repo directory to Windows Defender exclusions:
+Settings → Windows Security → Virus & threat protection → Exclusions → Add folder → select repo root.
 
 ---
 
@@ -109,14 +139,25 @@ docker compose exec fastapi alembic current
 ### Step 4 — Verify the API is running
 
 ```bash
-# Liveness probe
+# Git Bash / WSL2
 curl http://localhost:8000/health
-
-# Readiness probe (checks DB + Redis connectivity)
 curl http://localhost:8000/health/ready
+open http://localhost:8000/docs      # macOS/Linux
+```
 
-# Swagger UI (interactive API documentation)
-open http://localhost:8000/docs
+**PowerShell equivalent:**
+```powershell
+# Use curl.exe (not curl — that is an alias for Invoke-WebRequest in PowerShell)
+curl.exe http://localhost:8000/health
+curl.exe http://localhost:8000/health/ready
+
+# Open Swagger UI in default browser
+Start-Process http://localhost:8000/docs
+```
+
+**Expected health response:**
+```json
+{"status":"ok","service":"jewelry-ai","version":"1.0.0"}
 ```
 
 ---
@@ -204,8 +245,24 @@ pip install -e ".[dev]"
 
 ### Step 3 — Set required environment variables
 
+**Recommended (all shells):** Copy `.env.example` to `.env` and fill in your values — the app loads `.env` automatically via Pydantic Settings. This avoids per-session shell exports.
+
+```powershell
+# PowerShell
+copy .env.example .env
+# Then edit .env in your editor
+```
+
 ```bash
-# Git Bash
+# Git Bash / WSL2
+cp .env.example .env
+# Then edit .env in your editor
+```
+
+If you prefer per-session shell exports instead:
+
+```bash
+# Git Bash / WSL2 — use export
 export APP_ENV=testing
 export SECRET_KEY="local-dev-secret-key-32-chars-ok!"
 export DATABASE_URL="postgresql+asyncpg://jewelry_ai:jewelry_ai@localhost:5432/jewelry_ai_db"
@@ -218,7 +275,21 @@ export SENDGRID_API_KEY="SG...."
 export SENDGRID_FROM_EMAIL="test@example.com"
 ```
 
-Or copy `.env.example` to `.env` and fill it in — the app loads `.env` automatically via Pydantic Settings.
+```powershell
+# PowerShell — use $env: prefix
+$env:APP_ENV = "testing"
+$env:SECRET_KEY = "local-dev-secret-key-32-chars-ok!"
+$env:DATABASE_URL = "postgresql+asyncpg://jewelry_ai:jewelry_ai@localhost:5432/jewelry_ai_db"
+$env:TEST_DATABASE_URL = "postgresql+asyncpg://jewelry_ai:jewelry_ai@localhost:5432/jewelry_ai_test"
+$env:REDIS_URL = "redis://localhost:6379/0"
+$env:OPENAI_API_KEY = "sk-..."
+$env:APOLLO_API_KEY = "..."
+$env:HUNTER_API_KEY = "..."
+$env:SENDGRID_API_KEY = "SG...."
+$env:SENDGRID_FROM_EMAIL = "test@example.com"
+```
+
+> Note: PowerShell `$env:` variables are session-scoped only. Use `.env` file for persistence.
 
 ### Step 4 — Start FastAPI dev server (hot reload)
 
@@ -243,8 +314,20 @@ celery -A src.tasks.celery_app worker --loglevel=info -Q ingestion,enrichment,ou
 ### Upload a CSV file of leads
 
 ```bash
+# Git Bash / WSL2
 curl -X POST http://localhost:8000/api/v1/leads/upload \
   -F "file=@leads.csv"
+```
+
+**PowerShell equivalent:**
+```powershell
+# Option 1: curl.exe (ships with Windows 10+)
+curl.exe -X POST http://localhost:8000/api/v1/leads/upload -F "file=@leads.csv"
+
+# Option 2: Invoke-WebRequest
+$form = @{ file = Get-Item ".\leads.csv" }
+Invoke-WebRequest -Uri "http://localhost:8000/api/v1/leads/upload" `
+  -Method POST -Form $form
 ```
 
 **CSV format:**
@@ -271,7 +354,15 @@ No Domain Corp,,IN,manual
 ### Poll ingestion job status
 
 ```bash
+# Git Bash / WSL2
 curl http://localhost:8000/api/v1/leads/jobs/f47ac10b-58cc-4372-a567-0e02b2c3d479
+```
+
+**PowerShell equivalent:**
+```powershell
+curl.exe http://localhost:8000/api/v1/leads/jobs/f47ac10b-58cc-4372-a567-0e02b2c3d479
+# or
+(Invoke-WebRequest "http://localhost:8000/api/v1/leads/jobs/f47ac10b-58cc-4372-a567-0e02b2c3d479").Content
 ```
 
 **Response (completed):**
@@ -427,11 +518,20 @@ See `.env.example` for the complete list with descriptions.
 ```bash
 make down && make up
 ```
+```powershell
+# PowerShell — find and kill the process on a specific port (e.g. 8000)
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
+docker compose down && docker compose up --build -d
+```
 
 **Database migrations not applied:**
 ```bash
 make migrate
-# Check current revision:
+docker compose exec fastapi alembic current
+```
+```powershell
+docker compose exec fastapi alembic upgrade head
 docker compose exec fastapi alembic current
 ```
 
@@ -439,7 +539,38 @@ docker compose exec fastapi alembic current
 All required env vars are injected by `tests/conftest.py` — no `.env` needed for unit tests.
 
 **`make` not found on Windows:**
-Use Git Bash, or run the raw PowerShell commands listed in each section above.
+Use Git Bash, or run the raw PowerShell commands listed in each section above. Alternatively install GNU Make via [GnuWin32](https://gnuwin32.sourceforge.net/packages/make.htm) and add to PATH.
 
 **`pip install` dependency conflicts:**
 The warnings about `langchain-ollama` / `langchain-qdrant` are from your global Python environment — not this project. Use a virtual environment (`python -m venv .venv`) to isolate dependencies.
+
+**PowerShell execution policy error (`cannot be loaded because running scripts is disabled`):**
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+**Docker volume permission errors on Windows:**
+Ensure Docker Desktop is using the WSL2 backend (Settings → General → Use WSL2 engine). If using Hyper-V backend, share the drive: Settings → Resources → File Sharing → add the repo drive.
+
+**`curl` returns HTML instead of JSON in PowerShell:**
+PowerShell's `curl` is an alias for `Invoke-WebRequest`. Use `curl.exe` explicitly to get the real curl binary (ships with Windows 10 1803+):
+```powershell
+curl.exe http://localhost:8000/health
+```
+
+**Line ending issues (`\r\n` errors in Docker containers):**
+```bash
+# Run in Git Bash from repo root
+git config core.autocrlf false
+git rm --cached -r .
+git reset --hard
+```
+
+**`alembic` or `uvicorn` not found (local dev without Docker):**
+Ensure your virtual environment is activated:
+```powershell
+.\.venv\Scripts\Activate.ps1    # PowerShell
+```
+```bash
+source .venv/Scripts/activate   # Git Bash
+```

@@ -6,64 +6,74 @@
 **Purpose:** AI-powered lead automation platform for Shivam Jewels — transforms raw trade lists into enriched, scored, and outreached buyer relationships with zero manual intervention.
 
 > **Generic operating principles, agile workflow, layer architecture, code quality, and documentation structure patterns are defined in:**
-> **[ai-development-guidelines/CLAUDE-Generic.md](ai-development-guidelines/CLAUDE-Generic.md)**
+> **[best-practices_rule_set_code/CLAUDE-generic.md](best-practices_rule_set_code/CLAUDE-generic.md)**
 > Read that file first. This file adds Jewelry AI-specific context, links, and commands on top of it.
 
 ---
 
 ## MANDATORY: Rule Folders — Read Before Any Work
 
-**Before writing any code, creating any artifact, or starting any increment, ALL files in BOTH of these folders MUST be read and followed:**
+**Before writing any code, creating any artifact, or starting any increment, ALL relevant files in BOTH folders MUST be read and followed:**
 
-### 1. Generic Framework Rules — `best-practices_rule_set_code/`
+### 1. Generic & Stack Rules — `best-practices_rule_set_code/`
 
-This folder contains the reusable, project-agnostic engineering standards that apply to every project built on this framework.
+This folder contains reusable engineering standards. Files are suffixed by type:
+- `-generic` = stack-agnostic, applies to all projects
+- `-python` = Python/FastAPI/SQLAlchemy stack (this project's stack)
+- `-nestjs` = NestJS/TypeScript stack (not applicable here — see `GUIDELINES_COMPLIANCE-sj.md`)
 
 | File | Must Read Before |
 |---|---|
-| `CLAUDE-GENERIC.md` | Starting any project session |
-| `RULES.md` | Writing any code |
-| `ARCHITECTURE.md` | Designing folder structure |
+| `CLAUDE-generic.md` | Starting any project session |
+| `RULES-generic.md` | Writing any code |
 | `CodingStandards-python.md` | Writing any Python class or function |
-| `DesignPatterns.md` | Selecting implementation patterns |
-| `docs/rules/development-execution.md` | **Starting any increment** — increment anatomy, layer build order, gates |
-| `docs/rules/testing-rules.md` | **Writing any test** — respx, factory_boy, TDD workflow, coverage gate |
-| `docs/rules/testing-quality.md` | Writing any test — coverage thresholds, mocking rules |
-| `docs/rules/api-contracts.md` | Writing any router or endpoint |
-| `docs/rules/database-postgres.md` | Writing any migration, repository, or ORM model |
-| `docs/rules/error-observability.md` | Writing exception handling or logging |
-| `docs/rules/security.md` | Writing any endpoint that handles auth or user data |
-| `docs/rules/devops-deployment.md` | Writing Dockerfiles, CI pipelines, Makefiles |
-| `docs/rules/functional-landscape-rules.md` | Running Stage 1 Discovery |
-| `docs/rules/actor-roles-rules.md` | Defining actors or RBAC |
-| `docs/rules/epic-rules.md` | Writing Epics |
-| `docs/rules/user-story-rules.md` | Writing User Stories |
-| `docs/rules/ui-wireframe-rules.md` | Creating HTML wireframes (Stage 3.6) |
-| `docs/rules/frontend-streamlit-rules.md` | Writing Streamlit UI pages |
+| `DesignPatterns-generic.md` | Selecting implementation patterns |
+| `docs/rules/development-execution-generic.md` | **Starting any increment** — increment anatomy, layer build order, gates |
+| `docs/rules/testing-rules-generic.md` | **Writing any test** — respx, factory_boy, TDD workflow, coverage gate |
+| `docs/rules/testing-quality-generic.md` | Writing any test — coverage thresholds, mocking rules |
+| `docs/rules/api-contracts-generic.md` | Writing any router or endpoint |
+| `docs/rules/data-rules-python.md` | Writing any migration, repository, or ORM model |
+| `docs/rules/error-observability-python.md` | Writing exception handling or logging |
+| `docs/rules/security-python.md` | Writing any endpoint that handles auth or user data |
+| `docs/rules/devops-deployment-python.md` | Writing Dockerfiles, CI pipelines, Makefiles |
+| `docs/rules/configuration-rules-python.md` | Writing any config, settings, or env handling |
+| `docs/rules/performance-caching-rules-python.md` | Writing Redis, caching, or async patterns |
+| `docs/rules/coding-style-rules-generic.md` | Writing any function or class |
+| `docs/rules/functional-landscape-rules-generic.md` | Running Stage 1 Discovery |
+| `docs/rules/actor-roles-rules-generic.md` | Defining actors or RBAC |
+| `docs/rules/epic-rules-generic.md` | Writing Epics |
+| `docs/rules/user-story-rules-generic.md` | Writing User Stories |
+| `docs/rules/ui-wireframe-rules-generic.md` | Creating HTML wireframes (Stage 3.6) |
+| `docs/rules/frontend-streamlit-generic.md` | Writing Streamlit UI pages |
 
 ### 2. Project-Specific Guidelines — `project-specific-guidelines/`
 
-This folder contains Jewelry AI-specific decisions, overrides, and artifacts that extend the generic framework for this project.
+This folder contains Jewelry AI-specific decisions, overrides, and artifacts that extend the generic framework for this project. All files are suffixed `-sj`.
 
 | File | Must Read Before |
 |---|---|
-| `EXECUTION_WORKFLOW.md` | Starting any stage or increment |
-| `CodingStandards.md` | Writing any Python code for this project |
-| `DesignPatterns.md` | Implementing services, repositories, or agents |
-| `HLD.md` | Making any architectural decision |
-| `LLD.md` | Implementing any service, task, or router |
-| `Plan.md` | Planning or prioritising any work |
-| `rules/functional-landscape-rules.md` | Running Stage 1 Discovery |
-| `rules/actor-roles-rules.md` | Defining RBAC or access control |
-| `rules/epic-rules.md` | Writing or scoping Epics |
-| `rules/user-story-rules.md` | Writing User Stories |
-| `rules/testing-rules.md` | **Writing any test** — project-specific patterns, respx, factory_boy, Celery task testing |
-| `rules/ui-wireframe-rules.md` | Creating HTML wireframes |
-| `docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md` | Understanding system scope |
-| `docs/actors/ACTORS.md` | Implementing any role-based logic |
+| `EXECUTION_WORKFLOW-sj.md` | Starting any stage or increment |
+| `GUIDELINES_COMPLIANCE-sj.md` | Starting any session — confirms which rules apply and which SJ overrides exist |
+| `SKILLS-sj.md` | Executing any repeatable workflow — increment, enrichment, UI screen, LangGraph agent |
+| `CodingStandards-sj.md` | Writing any Python code for this project |
+| `DesignPatterns-sj.md` | Implementing services, repositories, or agents |
+| `Architecture-sj.md` | Making any architectural decision or folder structure choice |
+| `HLD-sj.md` | Making any system-level design decision |
+| `LLD-sj.md` | Implementing any service, task, or router |
+| `Plan-sj.md` | Planning or prioritising any work |
+| `rules/functional-landscape-rules-sj.md` | Running Stage 1 Discovery |
+| `rules/actor-roles-rules-sj.md` | Defining RBAC or access control |
+| `rules/epic-rules-sj.md` | Writing or scoping Epics |
+| `rules/user-story-rules-sj.md` | Writing User Stories |
+| `rules/testing-rules-sj.md` | **Writing any test** — project-specific patterns, respx, factory_boy, Celery task testing |
+| `rules/ai-ml-rules-sj.md` | Writing LangChain agents, LangGraph workflows, or LLM calls |
+| `rules/workflow-rules-sj.md` | Writing n8n webhooks, LangGraph state, or Celery tasks |
+| `rules/ui-wireframe-rules-sj.md` | Creating HTML wireframes |
+| `docs/functional-landscape/FUNCTIONAL_LANDSCAPE-sj.md` | Understanding system scope |
+| `docs/actors/ACTORS-sj.md` | Implementing any role-based logic |
 | `docs/wireframes/` | Implementing any Streamlit UI screen |
 
-> **Rule:** If a project-specific file exists for a topic, it takes precedence over the generic version. Both must be read — the generic provides the base, the project-specific provides the override.
+> **Rule:** If a project-specific (`-sj`) file exists for a topic, it takes precedence over the generic version. Both must be read — the generic provides the base, the project-specific provides the override.
 
 ---
 
@@ -71,17 +81,17 @@ This folder contains Jewelry AI-specific decisions, overrides, and artifacts tha
 
 Before writing any code, read in this order:
 
-1. **[CLAUDE-Generic.md](ai-development-guidelines/CLAUDE-Generic.md)** — Generic operating principles, layer architecture, agile workflow
-2. **[Rules.md](ai-development-guidelines/Rules.md)** — Master engineering rules (non-negotiables, architecture, quality checklist)
-3. **[FUNCTIONAL_LANDSCAPE.md](project-specific-guidelines/docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md)** — Complete module inventory, 7 layers, actor–module matrix
-4. **[ACTORS.md](project-specific-guidelines/docs/actors/ACTORS.md)** — Actor definitions, roles, permissions, data scoping
-5. **[Architecture.md](ai-development-guidelines/Architecture.md)** — Project folder structure, logging strategy, exception hierarchy
-6. **[docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md)** — Database schema, enums, migration index
-7. **[docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md)** — API endpoints, request/response shapes
+1. **[CLAUDE-generic.md](best-practices_rule_set_code/CLAUDE-generic.md)** — Generic operating principles, layer architecture, agile workflow
+2. **[RULES-generic.md](best-practices_rule_set_code/RULES-generic.md)** — Master engineering rules (non-negotiables, architecture, quality checklist)
+3. **[FUNCTIONAL_LANDSCAPE-sj.md](project-specific-guidelines/docs/functional-landscape/FUNCTIONAL_LANDSCAPE-sj.md)** — Complete module inventory, 7 layers, actor–module matrix
+4. **[ACTORS-sj.md](project-specific-guidelines/docs/actors/ACTORS-sj.md)** — Actor definitions, roles, permissions, data scoping
+5. **[Architecture-sj.md](project-specific-guidelines/Architecture-sj.md)** — Project folder structure, logging strategy, exception hierarchy
+6. **[DB_SCHEMA-sj.md](project-specific-guidelines/docs/DB_SCHEMA-sj.md)** — Database schema, enums, migration index
+7. **[API_SPEC-sj.md](project-specific-guidelines/docs/API_SPEC-sj.md)** — API endpoints, request/response shapes
 7.5. **[docs/wireframes/](project-specific-guidelines/docs/wireframes/)** — HTML wireframe mockups for all UI screens (WF-000 to WF-007)
-8. **[rules/testing-rules.md](ai-development-guidelines/rules/testing-rules.md)** — TDD workflow, pytest patterns, factory_boy, coverage gate
-9. **Relevant Epic** in `ai-development-guidelines/epics/` — Scope and acceptance criteria
-10. **Relevant User Story** in `ai-development-guidelines/stories/` — Behaviour, ACs, DoD
+8. **[testing-rules-generic.md](best-practices_rule_set_code/docs/rules/testing-rules-generic.md)** + **[testing-rules-sj.md](project-specific-guidelines/rules/testing-rules-sj.md)** — TDD workflow, pytest patterns, factory_boy, Celery task testing
+9. **Relevant Epic** in `project-specific-guidelines/docs/epics/` — Scope and acceptance criteria
+10. **Relevant User Story** in `project-specific-guidelines/docs/stories/` — Behaviour, ACs, DoD
 
 ---
 
@@ -91,70 +101,75 @@ Before writing any code, read in this order:
 
 | Document | Purpose | Link |
 |---|---|---|
-| **Ideas & Approach** | Solution concepts, tech stack rationale, POC scope | [ideas.md](ai-development-guidelines/ideas.md) |
-| **PRD** | Epics, user stories, functional landscape | [PRD.md](ai-development-guidelines/PRD.md) |
-| **Execution Plan** | Phase-by-phase SDLC plan with task checklists | [Plan.md](ai-development-guidelines/Plan.md) |
+| **Ideas & Approach** | Solution concepts, tech stack rationale, POC scope | [ideas-sj.md](project-specific-guidelines/ideas-sj.md) |
+| **PRD** | Epics, user stories, functional landscape | [PRD-sj.md](project-specific-guidelines/PRD-sj.md) |
+| **Execution Plan** | Phase-by-phase SDLC plan with task checklists | [Plan-sj.md](project-specific-guidelines/Plan-sj.md) |
+| **Guidelines Compliance** | Which generic rules apply, which have SJ overrides | [GUIDELINES_COMPLIANCE-sj.md](project-specific-guidelines/GUIDELINES_COMPLIANCE-sj.md) |
+| **Skills — Generic** | Reusable workflow playbooks (any stack) | [SKILLS-generic.md](best-practices_rule_set_code/SKILLS-generic.md) |
+| **Skills — Python** | Python/FastAPI/Celery workflow playbooks | [SKILLS-python.md](best-practices_rule_set_code/skills/SKILLS-python.md) |
+| **Skills — Jewelry AI** | SJ-specific workflows + overrides | [SKILLS-sj.md](project-specific-guidelines/SKILLS-sj.md) |
 
 ### Architecture & Design
 
 | Document | Purpose | Link |
 |---|---|---|
-| **Architecture** | Project folder structure, logging, exception hierarchy | [Architecture.md](ai-development-guidelines/Architecture.md) |
-| **HLD** | System diagram, deployment diagram, integration flow | [HLD.md](ai-development-guidelines/HLD.md) |
-| **LLD** | API endpoints, domain models, LangGraph nodes, Celery tasks | [LLD.md](ai-development-guidelines/LLD.md) |
-| **Design Patterns** | Repository, Strategy, Factory, LangGraph State Machine, Adapter | [DesignPatterns.md](ai-development-guidelines/DesignPatterns.md) |
+| **Architecture** | Project folder structure, logging, exception hierarchy | [Architecture-sj.md](project-specific-guidelines/Architecture-sj.md) |
+| **HLD** | System diagram, deployment diagram, integration flow | [HLD-sj.md](project-specific-guidelines/HLD-sj.md) |
+| **LLD** | API endpoints, domain models, LangGraph nodes, Celery tasks | [LLD-sj.md](project-specific-guidelines/LLD-sj.md) |
+| **Design Patterns** | Repository, Strategy, Factory, LangGraph State Machine, Adapter | [DesignPatterns-sj.md](project-specific-guidelines/DesignPatterns-sj.md) |
 
 ### Living Specifications
 
 | Document | Purpose | Link |
 |---|---|---|
-| **API Spec** | Full API endpoints with request/response examples | [docs/API_SPEC.md](ai-development-guidelines/docs/API_SPEC.md) |
-| **DB Schema** | Complete schema, column types, enums, migration index | [docs/DB_SCHEMA.md](ai-development-guidelines/docs/DB_SCHEMA.md) |
+| **API Spec** | Full API endpoints with request/response examples | [API_SPEC-sj.md](project-specific-guidelines/docs/API_SPEC-sj.md) |
+| **DB Schema** | Complete schema, column types, enums, migration index | [DB_SCHEMA-sj.md](project-specific-guidelines/docs/DB_SCHEMA-sj.md) |
 | **UI Wireframes** | HTML mockups for all 7 Streamlit screens with API annotations | [docs/wireframes/](project-specific-guidelines/docs/wireframes/) |
 
 ### Discovery & Planning
 
-> **Full workflow:** See [EXECUTION_WORKFLOW.md](project-specific-guidelines/EXECUTION_WORKFLOW.md) for the complete Stage 0–7 sequence.
+> **Full workflow:** See [EXECUTION_WORKFLOW-sj.md](project-specific-guidelines/EXECUTION_WORKFLOW-sj.md) for the complete Stage 0–7 sequence.
 > **Sequence:** Functional Landscape → Actors → PRD → Architecture → API Spec → **UI Wireframes** → Epics → User Stories → Code
 
 | Document | Layer | Purpose | Link |
 |---|---|---|---|
-| **Functional Landscape** | Project | 7-layer module inventory, actor–module matrix, out-of-scope | [docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md](project-specific-guidelines/docs/functional-landscape/FUNCTIONAL_LANDSCAPE.md) |
-| **Actor Index** | Project | All actors, roles, permissions, RBAC rules | [docs/actors/ACTORS.md](project-specific-guidelines/docs/actors/ACTORS.md) |
-| **Landscape Rules — Jewelry AI** | Project | Layer definitions, module catalog, Jewelry AI-specific rules | [rules/functional-landscape-rules.md](project-specific-guidelines/rules/functional-landscape-rules.md) |
-| **Actor Rules — Jewelry AI** | Project | Actor definitions, role permissions, data scoping | [rules/actor-roles-rules.md](project-specific-guidelines/rules/actor-roles-rules.md) |
-| **Epic Rules** | Generic | Anatomy, lifecycle, sizing, INVEST | [rules/epic-rules.md](ai-development-guidelines/rules/epic-rules.md) |
-| **User Story Rules** | Generic | Format, Three Cs, GWT, splitting | [rules/user-story-rules.md](ai-development-guidelines/rules/user-story-rules.md) |
-| **Epic Rules — Jewelry AI** | Project | Platform catalog (EPIC-01–15), phases, API deps, DoD | [rules/epic-rules.md](project-specific-guidelines/rules/epic-rules.md) |
-| **User Story Rules — Jewelry AI** | Project | Actors, toolchain DoD, AC examples, story paths | [rules/user-story-rules.md](project-specific-guidelines/rules/user-story-rules.md) |
+| **Functional Landscape** | Project | 7-layer module inventory, actor–module matrix, out-of-scope | [FUNCTIONAL_LANDSCAPE-sj.md](project-specific-guidelines/docs/functional-landscape/FUNCTIONAL_LANDSCAPE-sj.md) |
+| **Actor Index** | Project | All actors, roles, permissions, RBAC rules | [ACTORS-sj.md](project-specific-guidelines/docs/actors/ACTORS-sj.md) |
+| **Landscape Rules — Jewelry AI** | Project | Layer definitions, module catalog, Jewelry AI-specific rules | [functional-landscape-rules-sj.md](project-specific-guidelines/rules/functional-landscape-rules-sj.md) |
+| **Actor Rules — Jewelry AI** | Project | Actor definitions, role permissions, data scoping | [actor-roles-rules-sj.md](project-specific-guidelines/rules/actor-roles-rules-sj.md) |
+| **Epic Rules** | Generic | Anatomy, lifecycle, sizing, INVEST | [epic-rules-generic.md](best-practices_rule_set_code/docs/rules/epic-rules-generic.md) |
+| **User Story Rules** | Generic | Format, Three Cs, GWT, splitting | [user-story-rules-generic.md](best-practices_rule_set_code/docs/rules/user-story-rules-generic.md) |
+| **Epic Rules — Jewelry AI** | Project | Platform catalog (EPIC-01–15), phases, API deps, DoD | [epic-rules-sj.md](project-specific-guidelines/rules/epic-rules-sj.md) |
+| **User Story Rules — Jewelry AI** | Project | Actors, toolchain DoD, AC examples, story paths | [user-story-rules-sj.md](project-specific-guidelines/rules/user-story-rules-sj.md) |
 
 ### Standards & Rules
 
 | Document | Purpose | Link |
 |---|---|---|
-| **Rules (Master)** | All rules index, architecture layers, code quality checklist | [Rules.md](ai-development-guidelines/Rules.md) |
-| **Coding Standards** | Class boilerplate, docstrings, naming, type hints | [CodingStandards.md](ai-development-guidelines/CodingStandards.md) |
-| Coding Style Rules | Immutability, async, file size, nesting | [rules/coding-style-rules.md](ai-development-guidelines/rules/coding-style-rules.md) |
-| Security Rules | Secrets, validation, auth, rate limiting | [rules/security-rules.md](ai-development-guidelines/rules/security-rules.md) |
-| Testing Rules | TDD, 80% coverage, test organization, factories | [rules/testing-rules.md](ai-development-guidelines/rules/testing-rules.md) |
-| API Design Rules | REST conventions, response format, versioning | [rules/api-design-rules.md](ai-development-guidelines/rules/api-design-rules.md) |
-| Data Rules | DB conventions, migrations, soft deletes, pgvector | [rules/data-rules.md](ai-development-guidelines/rules/data-rules.md) |
-| Error & Observability | Exception hierarchy, structured logging, correlation IDs, health checks | [rules/error-observability.md](ai-development-guidelines/rules/error-observability.md) |
-| DevOps & Deployment | Docker, CI/CD, env validation, Makefile, deployment checklist | [rules/devops-deployment.md](ai-development-guidelines/rules/devops-deployment.md) |
-| AI / ML Rules | LangChain, LangGraph, LLM cost, Celery tasks, MLflow | [rules/ai-ml-rules.md](ai-development-guidelines/rules/ai-ml-rules.md) |
-| Performance & Caching | Redis patterns, N+1 prevention, rate limiting, connection pooling | [rules/performance-caching-rules.md](ai-development-guidelines/rules/performance-caching-rules.md) |
-| Frontend — Streamlit | Thin UI rules, APIClient, session state, caching, error handling | [rules/frontend-streamlit-rules.md](ai-development-guidelines/rules/frontend-streamlit-rules.md) |
-| Workflow — n8n / LangGraph / Celery | Layer responsibilities, n8n webhook design, LangGraph state, Celery tasks | [rules/workflow-rules.md](ai-development-guidelines/rules/workflow-rules.md) |
-| Configuration Management | Pydantic Settings class, feature flags, env file structure, env-specific overrides | [rules/configuration-rules.md](ai-development-guidelines/rules/configuration-rules.md) |
-| Synthetic & Demo Data | Demo data rules, `.example.com` domains, seed script structure, test factories | [rules/synthetic-data-rules.md](ai-development-guidelines/rules/synthetic-data-rules.md) |
-| **UI Wireframe Rules (generic)** | HTML format, WF-NNN naming, component library, API annotation pattern, DoD | [best-practices_rule_set_code/docs/rules/ui-wireframe-rules.md](best-practices_rule_set_code/docs/rules/ui-wireframe-rules.md) |
-| **UI Wireframe Rules (Jewelry AI)** | 7-screen catalog, actor-screen matrix, API field bindings per screen | [rules/ui-wireframe-rules.md](project-specific-guidelines/rules/ui-wireframe-rules.md) |
+| **Rules (Master)** | All rules index, architecture layers, code quality checklist | [RULES-generic.md](best-practices_rule_set_code/RULES-generic.md) |
+| **Coding Standards** | Class boilerplate, docstrings, naming, type hints | [CodingStandards-sj.md](project-specific-guidelines/CodingStandards-sj.md) |
+| Coding Style Rules | Immutability, async, file size, nesting | [coding-style-rules-generic.md](best-practices_rule_set_code/docs/rules/coding-style-rules-generic.md) |
+| Security Rules | Secrets, validation, auth, rate limiting | [security-python.md](best-practices_rule_set_code/docs/rules/security-python.md) |
+| Testing Rules (generic) | TDD, 80% coverage, test organisation, factories | [testing-rules-generic.md](best-practices_rule_set_code/docs/rules/testing-rules-generic.md) |
+| Testing Rules (SJ) | Project test stack, Celery/LangGraph patterns, factories | [testing-rules-sj.md](project-specific-guidelines/rules/testing-rules-sj.md) |
+| API Design Rules | REST conventions, response format, versioning | [api-design-rules-sj.md](project-specific-guidelines/rules/api-design-rules-sj.md) |
+| Data Rules | DB conventions, migrations, soft deletes, pgvector | [data-rules-python.md](best-practices_rule_set_code/docs/rules/data-rules-python.md) |
+| Error & Observability | Exception hierarchy, structured logging, correlation IDs, health checks | [error-observability-python.md](best-practices_rule_set_code/docs/rules/error-observability-python.md) |
+| DevOps & Deployment | Docker, CI/CD, env validation, Makefile, deployment checklist | [devops-deployment-python.md](best-practices_rule_set_code/docs/rules/devops-deployment-python.md) |
+| AI / ML Rules | LangChain, LangGraph, LLM cost, Celery tasks, MLflow | [ai-ml-rules-sj.md](project-specific-guidelines/rules/ai-ml-rules-sj.md) |
+| Performance & Caching | Redis patterns, N+1 prevention, rate limiting, connection pooling | [performance-caching-rules-python.md](best-practices_rule_set_code/docs/rules/performance-caching-rules-python.md) |
+| Frontend — Streamlit | Thin UI rules, APIClient, session state, caching, error handling | [frontend-streamlit-generic.md](best-practices_rule_set_code/docs/rules/frontend-streamlit-generic.md) |
+| Workflow — n8n / LangGraph / Celery | Layer responsibilities, n8n webhook design, LangGraph state, Celery tasks | [workflow-rules-sj.md](project-specific-guidelines/rules/workflow-rules-sj.md) |
+| Configuration Management | Pydantic Settings class, feature flags, env file structure, env-specific overrides | [configuration-rules-python.md](best-practices_rule_set_code/docs/rules/configuration-rules-python.md) |
+| Synthetic & Demo Data | Demo data rules, `.example.com` domains, seed script structure, test factories | [synthetic-data-rules-sj.md](project-specific-guidelines/rules/synthetic-data-rules-sj.md) |
+| **UI Wireframe Rules (generic)** | HTML format, WF-NNN naming, component library, API annotation pattern, DoD | [ui-wireframe-rules-generic.md](best-practices_rule_set_code/docs/rules/ui-wireframe-rules-generic.md) |
+| **UI Wireframe Rules (Jewelry AI)** | 7-screen catalog, actor-screen matrix, API field bindings per screen | [ui-wireframe-rules-sj.md](project-specific-guidelines/rules/ui-wireframe-rules-sj.md) |
 
 ### POC & Demo
 
 | Document | Purpose | Link |
 |---|---|---|
-| **POC — Phase 0** | Local demo scope, 15-min demo script, setup instructions, success criteria | [docs/POC.md](ai-development-guidelines/docs/POC.md) |
+| **POC — Phase 0** | Local demo scope, 15-min demo script, setup instructions, success criteria | [POC-sj.md](project-specific-guidelines/docs/POC-sj.md) |
 
 ---
 
@@ -270,7 +285,7 @@ pip install -e ".[dev]"
 
 ## Windows Developer Notes
 
-This project is **fully supported on Windows** via Docker Desktop + Git Bash. See [rules/devops-deployment.md](ai-development-guidelines/rules/devops-deployment.md) → *Windows Developer Setup* section for:
+This project is **fully supported on Windows** via Docker Desktop + Git Bash. See [devops-deployment-python.md](best-practices_rule_set_code/docs/rules/devops-deployment-python.md) → *Windows Developer Setup* section for:
 - Shell recommendation (Git Bash vs WSL2 vs PowerShell)
 - `make` ↔ PowerShell command equivalents
 - Virtual environment activation on Windows
@@ -282,7 +297,7 @@ This project is **fully supported on Windows** via Docker Desktop + Git Bash. Se
 
 ## Current Phase
 
-**Phase 0 — Foundation Setup** (see [Plan.md](ai-development-guidelines/Plan.md))
+**Phase 0 — Foundation Setup** (see [Plan-sj.md](project-specific-guidelines/Plan-sj.md))
 
 Immediate next steps:
 1. `.gitattributes` — line ending enforcement (Windows compatibility)
@@ -291,7 +306,7 @@ Immediate next steps:
 4. `src/core/config.py` — pydantic-settings with startup validation
 5. `src/db/session.py` — async SQLAlchemy engine
 6. Alembic baseline migration
-7. Scaffold complete folder structure per [Architecture.md](ai-development-guidelines/Architecture.md)
+7. Scaffold complete folder structure per [Architecture-sj.md](project-specific-guidelines/Architecture-sj.md)
 
 ---
 

@@ -163,21 +163,42 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/v1/enrichment/jobs/{job_id}" -
 
 ---
 
-### Phase 3 — Outreach Generation & Sending ❌ NOT STARTED
+### Phase 3 — Outreach Generation & Sending ✅ COMPLETE
 | Increment | Description | Status | Commit |
 |---|---|---|---|
-| 3.1 | OutreachMessage domain model + DB model + migration | ⬜ | — |
-| 3.2 | SendGridClient (transactional email) | ⬜ | — |
-| 3.3 | OutreachAgent (LangChain LLM chain, jewelry-domain prompt) | ⬜ | — |
-| 3.4 | OutreachService (generate + queue for review + send) | ⬜ | — |
-| 3.5 | Celery outreach task | ⬜ | — |
-| 3.6 | `/outreach` API router | ⬜ | — |
-| 3.7 | Streamlit outreach review + send UI (WF-004/WF-005) | ⬜ | — |
-| 3.8 | Unit + integration tests | ⬜ | — |
+| 3.1 | OutreachMessage domain model + DB model | ✅ | pending push |
+| 3.2 | OutreachRepository | ✅ | pending push |
+| 3.3 | SendGridClient (transactional email via SDK) | ✅ | pending push |
+| 3.4 | OutreachAgent (LangChain gpt-4o-mini, jewelry prompt) | ✅ | pending push |
+| 3.5 | OutreachService (generate + approve/send + reject + webhook) | ✅ | pending push |
+| 3.6 | Celery outreach task (queue: outreach) | ✅ | pending push |
+| 3.7 | `/api/v1/outreach` router (8 endpoints) | ✅ | pending push |
+| 3.8 | Streamlit Outreach Review UI + app.py nav | ✅ | pending push |
+| 3.9 | Unit tests: service (10 cases) + router (12 cases) | ✅ | pending push |
+| 3.10 | OutreachMessageFactory (test fixtures) | ✅ | pending push |
+
+**Execution Commands:**
+```powershell
+# After starting services, generate outreach for a lead
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/outreach/generate/{lead_id}" -Method Post
+
+# Poll job status
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/outreach/jobs/{job_id}" -Method Get
+
+# List pending review messages
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/outreach/messages?status=pending_review" -Method Get
+
+# Approve and send
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/outreach/messages/{id}/approve" -Method Post
+
+# Reject with reason
+$body = '{"reason": "Tone too formal"}'
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/outreach/messages/{id}/reject" -Method Post -Body $body -ContentType "application/json"
+```
 
 **Keys Required:**
-- `SENDGRID_API_KEY` + `SENDGRID_FROM_EMAIL` — must verify sender domain in SendGrid dashboard
-- `OPENAI_API_KEY` — for LLM email generation
+- `SENDGRID_API_KEY` + `SENDGRID_FROM_EMAIL` — verify sender domain in SendGrid dashboard
+- `OPENAI_API_KEY` — for gpt-4o-mini email generation
 
 ---
 
@@ -319,8 +340,14 @@ docker compose up --build -d
 
 ## Next Increment to Execute
 
-**Phase 3 — Increment 3.1:** `OutreachMessage` domain model + DB model + migration
+**Phase 3 — Migration:** Run Alembic migration to create `outreach_messages` table
+```powershell
+docker compose exec fastapi alembic revision --autogenerate -m "add_outreach_messages_table"
+docker compose exec fastapi alembic upgrade head
+```
 
-Pre-requisites:
-- `SENDGRID_API_KEY` + `SENDGRID_FROM_EMAIL` added to `.env` (verify sender domain in SendGrid)
-- `OPENAI_API_KEY` in `.env` (for LLM email generation chain)
+**Phase 4 — Increment 4.1:** LangGraph `LeadPipeline` state machine
+
+Pre-requisites for Phase 4:
+- All Phase 3 services running and tested end-to-end
+- n8n webhook URL configured: `N8N_WEBHOOK_URL=http://localhost:5678/webhook/...`

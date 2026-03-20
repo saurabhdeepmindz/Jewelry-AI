@@ -24,8 +24,11 @@ st.set_page_config(
 
 pages = {
     "Lead Management": [
-        st.Page("src/ui/pages/upload.py", title="Upload Leads", icon="📤"),
-        st.Page("src/ui/pages/lead_detail.py", title="Lead Detail", icon="🔍"),
+        st.Page("pages/upload.py", title="Upload Leads", icon="📤"),
+        st.Page("pages/lead_detail.py", title="Lead Detail", icon="🔍"),
+    ],
+    "Outreach": [
+        st.Page("pages/outreach.py", title="Outreach Review", icon="✉️"),
     ],
 }
 

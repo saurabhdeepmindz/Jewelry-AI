@@ -11,5 +11,7 @@ Add each new model import here as it is created in later increments:
 """
 # Increment 1 — Lead ingestion
 # Increment 2 — Contact enrichment
+# Increment 3 — Outreach generation
 from src.db.models.contact import Contact  # noqa: F401
 from src.db.models.lead import Lead  # noqa: F401
+from src.db.models.outreach import OutreachMessage  # noqa: F401
